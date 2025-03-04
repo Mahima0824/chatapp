@@ -1,0 +1,22 @@
+(globalThis.TURBOPACK = globalThis.TURBOPACK || []).push([
+    "static/chunks/app_page_tsx_5eef42._.js",
+    {},
+]);
+(globalThis.TURBOPACK_CHUNK_LISTS = globalThis.TURBOPACK_CHUNK_LISTS || []).push({
+  "path": "static/chunks/app_page_tsx_5eef42._.js",
+  "chunks": [
+    "static/chunks/_225284._.js",
+    "static/chunks/node_modules_framer-motion_dist_es_db8516._.js",
+    "static/chunks/node_modules_react-icons_io5_index_mjs_39106f._.js",
+    "static/chunks/node_modules_react-icons_hi_index_mjs_d23786._.js",
+    "static/chunks/node_modules_react-icons_pi_index_mjs_658a28._.js",
+    "static/chunks/node_modules_react-icons_fa_index_mjs_d2e2d7._.js",
+    "static/chunks/node_modules_react-icons_sl_index_mjs_f0cdce._.js",
+    "static/chunks/node_modules_react-icons_lib_74ccc9._.js",
+    "static/chunks/node_modules_date-fns_2e9578._.js",
+    "static/chunks/node_modules_react-day-picker_dist_index_esm_9fc304.js",
+    "static/chunks/node_modules_860690._.js",
+    "static/chunks/node_modules_react-day-picker_dist_style_c02261.css"
+  ],
+  "source": "dynamic"
+});
