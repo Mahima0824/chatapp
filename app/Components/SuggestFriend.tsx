@@ -2,7 +2,7 @@ import { HoverEffect } from "@/components/ui/card-hover-effect";
 
 export function SuggestFriend() {
   return (
-    <div className="max-w-7xl mx-auto overflow-y-auto ">
+    <div className=" overflow-y-auto ">
       <h2 className="text-2xl font-bold text-center text-white mb-6">People You May Know</h2>
       <HoverEffect items={suggestedFriends} />
     </div>

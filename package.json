@@ -34,15 +34,10 @@
     "react-day-picker": "^8.10.1",
     "react-icons": "^5.5.0",
     "react-pdf": "^9.2.1",
-<<<<<<< HEAD
     "react-toastify": "^11.0.5",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.174.0",
-=======
-    "tailwind-merge": "^3.0.1",
-    "tailwindcss-animate": "^1.0.7",
->>>>>>> 72f793bc761b108143829420631aaa61d6639d50
     "v-emoji-picker": "^2.3.3"
   },
   "devDependencies": {
@@ -51,10 +46,7 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@types/react-pdf": "^7.0.0",
-<<<<<<< HEAD
     "@types/three": "^0.174.0",
-=======
->>>>>>> 72f793bc761b108143829420631aaa61d6639d50
     "eslint": "^9",
     "eslint-config-next": "15.1.0",
     "postcss": "^8",
