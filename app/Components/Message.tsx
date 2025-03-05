@@ -75,56 +75,68 @@ const Message: React.FC<MessageProps> = ({
         isOwnMessage ? "justify-end items-end" : "justify-start items-start"
       } my-5`}
     >
-      <Menu as="div" className="relative group cursor-pointer rounded-lg">
+      <Menu
+        as="div"
+        className="relative  group max-w-[90%] cursor-pointer rounded-lg"
+      >
         <div
-          className={`p-3 w-auto rounded-lg max-w-[90%] shadow-md transition-all ${
-            isOwnMessage ? "bg-blue-500 text-white" : "bg-gray-100 text-black"
-          }`}
+          className={`p-3 w-auto rounded-lg  flex items-center gap-3 shadow-md transition-all
+             ${
+               isOwnMessage
+                 ? "bg-blue-500 text-white"
+                 : "bg-gray-100 text-black"
+             }
+            ${isEmojiOnly || isImage || isPdf ? "bg-transparent" : ""}`}
         >
-          {isEmojiOnly ? (
-            <span
-              dangerouslySetInnerHTML={{ __html: message.text }}
-              className="w-20 h-20 block object-center object-cover"
-            ></span>
-          ) : isPdf ? (
-            <div className="flex items-center gap-3">
-              <FileText className="text-red-500 w-8 h-8" />
-              <div>
-                <p className="text-sm font-medium text-gray-800">
-                  {message.file?.name}
-                </p>
-                <a
-                  href={message.file?.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline text-sm"
-                >
-                  Open PDF
-                </a>
+          <div>
+            {isEmojiOnly ? (
+              <span
+                dangerouslySetInnerHTML={{ __html: message.text }}
+                className="w-20 h-20 block object-center object-cover"
+              ></span>
+            ) : isPdf ? (
+              <div className="flex items-center gap-3">
+                <FileText className="text-red-500 w-8 h-8" />
+                <div>
+                  <p className="text-sm font-medium text-gray-800">
+                    {message.file?.name}
+                  </p>
+                  <a
+                    href={message.file?.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 underline text-sm"
+                  >
+                    Open PDF
+                  </a>
+                </div>
               </div>
-            </div>
-          ) : isImage ? (
-            <img
-              src={message.file?.url}
-              alt={message.file?.name || "Uploaded file"}
-              className="rounded cursor-pointer"
-              style={{
-                maxWidth: message.file?.width
-                  ? `${message.file.width}px`
-                  : "200px",
-                maxHeight: message.file?.height
-                  ? `${message.file.height}px`
-                  : "200px",
-              }}
-              onClick={() => openImageModal(message.file!.url)}
-            />
-          ) : (
-            <div
-              className=" min-w-[60px] pr-8 text-nowrap block"
-              dangerouslySetInnerHTML={{ __html: message.text }}
-            ></div>
-          )}
-          <Menu.Button className="block absolute top-4 right-5 text-xs text-gray-300">
+            ) : isImage ? (
+              <img
+                src={message.file?.url}
+                alt={message.file?.name || "Uploaded file"}
+                className="rounded cursor-pointer"
+                style={{
+                  maxWidth: message.file?.width
+                    ? `${message.file.width}px`
+                    : "200px",
+                  maxHeight: message.file?.height
+                    ? `${message.file.height}px`
+                    : "200px",
+                }}
+                onClick={() => openImageModal(message.file!.url)}
+              />
+            ) : (
+              <p
+                className="text-[13px]"
+                dangerouslySetInnerHTML={{ __html: message.text }}
+              ></p>
+            )}
+          </div>
+          <Menu.Button
+            className="group-hover:block group-active: self-start hidden
+           text-xs text-gray-300"
+          >
             <FaChevronDown />
           </Menu.Button>
         </div>

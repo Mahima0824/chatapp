@@ -9,7 +9,6 @@ import Group from "./Group";
 import Calls from "./Calls";
 import Status from "./Status";
 import { useSidebar } from "../Context/context";
-import { SuggestFriend } from "./SuggestFriend";
 
 interface Conversation {
   id: string;
@@ -40,7 +39,7 @@ interface SidebarProps {
   onSelectCall: (call: Call) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({
+const   Sidebar: React.FC<SidebarProps> = ({
   conversations,
   statusUpdates,
   onSelectConversation,
@@ -79,90 +78,83 @@ const Sidebar: React.FC<SidebarProps> = ({
       initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="fixed top-0 left-0 h-screen w-[350px] bg-gray-900 border-r border-gray-700 p-4"
+      className="fixed top-0 left-0 h-screen w-[350px] bg-gray-900 border-r border-gray-800 p-5 shadow-lg"
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-6">
         <motion.div
-          whileHover={{ scale: 1.1 }}
+          whileHover={{ scale: 1.05 }}
           className="flex items-center gap-4 cursor-pointer"
           onClick={() => setProfilemodel(true)}
         >
           <Avatar className="w-12 h-12 border-2 border-blue-500 rounded-full">
             <AvatarImage
-              src="https://images.unsplash.com/photo-1665970128288-1f872310713e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHBvdHJhaXQlMjBtb2RhbCUyMGltZ3xlbnwwfHwwfHx8MA%3D%3D"
+              src="https://images.unsplash.com/photo-1665970128288-1f872310713e?w=500&auto=format&fit=crop&q=60"
               className="w-full h-full object-cover"
               alt="User"
             />
           </Avatar>
-          <span className="text-white font-semibold">Mahima</span>
+          <span className="text-white font-semibold text-lg">Mahima</span>
         </motion.div>
-        <div className="flex gap-2">
-          <IconButton
-            name="PiNotePencil"
-            size={16}
-            onClick={() => setProfilemodel(true)}
-          />
-          <IconButton name="IoSettings" size={16}   onClick={() => setSettingmodel(true)}/>
+        <div className="flex gap-3">
+          <IconButton name="PiNotePencil" size={18} onClick={() => setProfilemodel(true)} />
+          <IconButton name="IoSettings" size={18} onClick={() => setSettingmodel(true)} />
         </div>
       </div>
 
-      <PlaceholdersAndVanishInput       
-        placeholders={["Search"]}
+      <PlaceholdersAndVanishInput 
+        placeholders={["Search..."]}
         onChange={(e) => setSearchTerm(e.target.value)}
         arrow={true}
       />
 
-      <div className="flex justify-around mt-4 border-b border-gray-600 relative">
+      {/* Tabs */}
+      <div className="flex justify-center mt-5 space-x-4">
         {["Chats", "Groups", "Status", "Calls"].map((tab) => (
-          <motion.button
+          <button
             key={tab}
             onClick={() => handleTabClick(tab)}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className={`relative py-2 px-4 text-sm font-semibold rounded-t-lg transition-all duration-300 ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
               activeTab === tab
-                ? "text-white bg-gradient-to-r from-blue-500 to-indigo-500 shadow-lg scale-105"
+                ? "bg-gray-700 text-white shadow-md"
                 : "text-gray-400 hover:text-white hover:bg-gray-800"
             }`}
           >
             {tab}
-          </motion.button>
+          </button>
         ))}
       </div>
 
+      {/* Content Section */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="mt-4  "
+        className="mt-5 space-y-3"
       >
         {activeTab === "Chats" &&
           filteredConversations.map((conv) => (
-            <motion.div key={conv.id} whileHover={{ scale: 1.05 }}>
-              <Person
-                conversation={conv}
-                onClick={() => onSelectConversation(conv)}
-              />
+            <motion.div key={conv.id} whileHover={{ scale: 1.03 }}>
+              <Person conversation={conv} onClick={() => onSelectConversation(conv)} />
             </motion.div>
           ))}
+
         {activeTab === "Groups" &&
           filteredGroups.map((group) => (
-            <motion.div key={group.id} whileHover={{ scale: 1.05 }}>
-              <Group
-                conversation={group}
-                onClick={() => onSelectConversation(group)}
-              />
+            <motion.div key={group.id} whileHover={{ scale: 1.03 }}>
+              <Group conversation={group} onClick={() => onSelectConversation(group)} />
             </motion.div>
           ))}
+
         {activeTab === "Status" &&
           filteredStatus.map((status) => (
-            <motion.div key={status.id} whileHover={{ scale: 1.05 }}>
+            <motion.div key={status.id} whileHover={{ scale: 1.03 }}>
               <Status status={status} onClick={() => onSelectStatus(status)} />
             </motion.div>
           ))}
+
         {activeTab === "Calls" &&
           filteredCalls.map((call) => (
-            <motion.div key={call.id} whileHover={{ scale: 1.05 }}>
+            <motion.div key={call.id} whileHover={{ scale: 1.03 }}>
               <Calls call={call} onClick={() => onSelectCall(call)} />
             </motion.div>
           ))}

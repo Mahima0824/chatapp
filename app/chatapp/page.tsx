@@ -17,17 +17,19 @@ interface Group {
   id: string;
   name: string;
   avatar: string;
+  lastMessage: string;
 }
 
-interface StatusUpdate {
-  id: string;
-  user: string;
-  status: string;
-  time: string;
-  avatar: string;
-  image?: string;
-  type?: "video" | "image";
+export interface StatusUpdate {  
+  id: string;  
+  user: string;  
+  status: string;  
+  time: string;  
+  avatar: string;  
+  image?: string;  
+  type?: "video" | "image";  
 }
+
 
 interface Call {
   id: string;
@@ -127,6 +129,7 @@ export default function Home() {
       id: "101",
       name: "Friends Group",
       avatar: "https://i.pravatar.cc/150?img=3",
+      lastMessage: "Let's plan a trip!",
     },
   ];
 
@@ -145,35 +148,35 @@ export default function Home() {
       type: "audio",
     },
   ];
-  type SharedMedia = string; 
+  type SharedMedia = string;
 
-type SharedLink = string; 
+  type SharedLink = string;
 
-interface SharedDoc {
-  name: string;
-  url: string;
-}
+  interface SharedDoc {
+    name: string;
+    url: string;
+  }
 
-type TabType = "media" | "links" | "docs"; 
+  type TabType = "media" | "links" | "docs";
 
-const sharedMedia: SharedMedia[] = [
+  const sharedMedia: SharedMedia[] = [
     "https://images.unsplash.com/photo-1665970128288-1f872310713e?w=500",
     "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?w=500",
     "https://images.unsplash.com/photo-1557683316-973673baf926?w=500",
   ];
-  
+
   const sharedLinks: SharedLink[] = [
     "https://www.example.com/article1",
     "https://www.example.com/article2",
     "https://www.example.com/article3",
   ];
-  
+
   const sharedDocs: SharedDoc[] = [
     { name: "Document 1", url: "https://www.example.com/doc1.pdf" },
     { name: "Document 2", url: "https://www.example.com/doc2.pdf" },
     { name: "Document 3", url: "https://www.example.com/doc3.pdf" },
   ];
-  
+
   const handleSelectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     setSelectedStatus(null);
@@ -188,18 +191,34 @@ const sharedMedia: SharedMedia[] = [
     setSelectedConversation(null);
     setSelectedStatus(null);
   };
+  interface SidebarProps {
+    conversations: Conversation[];
+    groups: Group[];
+    statusUpdates: StatusUpdate[];
+    calls: Call[];
+    onSelectConversation: (conversation: Conversation) => void;
+    onSelectStatus: (status: StatusUpdate) => void;
+    onSelectCall: (call: Call) => void;
+  }
 
   return (
-    <motion.div 
-    initial={{ opacity: 0,}}
-    animate={{ opacity: 1,  }}
-    transition={{ duration: 0.6 }}
-    className="flex items-center justify-center h-screen bg-gradient-to-br from-[#1e1e2e] to-[#101018]">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="flex items-center justify-center h-screen bg-gradient-to-br from-[#1e1e2e] to-[#101018]"
+    >
       <div className="w-full h-full rounded-2xl text-white glassEffect overflow-hidden">
         <div className="flex">
           <Sidebar
-            conversations={conversations}
-            groups={groups}
+            conversations={[
+              ...conversations,
+              ...groups.map((group) => ({
+                ...group,
+                lastMessage: "Group chat",
+              })),
+            ]}
+            groups={groups} 
             statusUpdates={statusUpdates}
             calls={calls}
             onSelectConversation={handleSelectConversation}
@@ -209,10 +228,10 @@ const sharedMedia: SharedMedia[] = [
 
           <div className="ml-[350px] overflow-y-auto min-h-screen w-full">
             <motion.div
-             initial={{ opacity: 0,}}
-             animate={{ opacity: 1,  }}
-             transition={{ duration: 0.6 }}
-             className=" overflow-y-auto min-h-screen"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              className=" overflow-y-auto min-h-screen"
             >
               {selectedConversation ? (
                 <ChatWindow
