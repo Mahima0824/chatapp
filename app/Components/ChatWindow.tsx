@@ -11,12 +11,15 @@ import isToday from "dayjs/plugin/isToday";
 import isYesterday from "dayjs/plugin/isYesterday";
 import SearchModal from "./SearchModal";
 import { useSidebar } from "../Context/context";
+import { useTheme } from "../Context/ThemeContext";
 import { successToast } from "@/components/ui/Toast";
 import ChatInput from "./ChatInput";
 import PersonalInfo from "./PersonalInfo";
+
 dayjs.extend(relativeTime);
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
+
 interface MessageType {
   id: number;
   text: string;
@@ -30,11 +33,13 @@ interface MessageType {
     url: string;
   } | null;
 }
+
 interface Conversation {
   id: string;
   name: string;
   avatar: string;
 }
+
 interface ChatWindowProps {
   conversation: Conversation;
   messages: MessageType[];
@@ -42,6 +47,7 @@ interface ChatWindowProps {
   sharedLinks: string[];
   sharedDocs: { name: string; url: string }[];
 }
+
 const ChatWindow: React.FC<ChatWindowProps> = ({
   conversation,
   messages: initialMessages,
@@ -55,11 +61,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [showPicker, setShowPicker] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
   const handleSend = (
-    textMessage: any,
+    textMessage: string,
     file: MessageType["file"] = null
   ): void => {
     if (textMessage?.trim() || file) {
@@ -74,11 +83,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       };
       setNewestMessageId(newMessage.id);
       setMessages([...messages, newMessage]);
-    } else {
-      textMessage == null ? null : message;
     }
     setMessage("");
   };
+
   const handleEmojiSelect = (selectedEmoji: EmojiType) => {
     const emojiMessage = `<img src="${selectedEmoji.url}" alt="emoji" class="w-full h-full inline-block" />`;
     handleSend(emojiMessage);
@@ -108,21 +116,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }, {} as Record<string, MessageType[]>);
 
   const [search, setSearch] = useState(false);
-  const handleSearch = () => {
-    setSearch(true);
-    console.log("serach");
-  };
+  const handleSearch = () => setSearch(true);
 
   const wallpaperInputRef = useRef<HTMLInputElement>(null);
   const [wallpaper, setWallpaper] = useState<string>("");
   const [showWallpaperModal, setShowWallpaperModal] = useState(false);
   const [customColor, setCustomColor] = useState<string>("#000000");
-  const [editMessageId, setEditMessageId] = useState<number | null>(null);
-  const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    message: MessageType;
-  } | null>(null);
   const { editmodel, setEditmodel } = useSidebar();
 
   const handleWallpaperUpload = (
@@ -143,46 +142,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const handleEdit = (msg: MessageType) => {
     setMessage(msg.text);
-    setEditMessageId(msg.id);
-    setContextMenu(null);
     setEditmodel(true);
   };
 
   const handleCopy = (msg: MessageType) => {
     navigator.clipboard.writeText(msg.text);
-    setContextMenu(null);
-    successToast("success");
+    successToast("Copied to clipboard!");
   };
 
   const handleDelete = (msgId: number) => {
     setMessages(messages.filter((m) => m.id !== msgId));
-    setContextMenu(null);
   };
-  
-  const [activeConversation, setActiveConversation] = useState(conversation);
-const [filteredMessages, setFilteredMessages] = useState<MessageType[]>(messages);
-const handleSearching = (query: string) => {
-  if (!query) {
-    setActiveConversation(conversation);
-    setFilteredMessages(messages);
-    return;
-  }
-  const matchingConversation = conversations.find((conv) =>
-    conv.name.toLowerCase().includes(query.toLowerCase())
-  );
-  if (matchingConversation) {
-    setActiveConversation(matchingConversation);
-    
-   
-    const newMessages = messages.filter(
-      (msg) => msg.conversationId === matchingConversation.id
-    );
-    setFilteredMessages(newMessages);
-  }
-};
+
   return (
     <motion.div
-      className="flex h-screen"
+      className={`flex h-screen transition-all duration-300 ${
+        theme === "dark" ? "text-white" : "text-black"
+      }`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
@@ -193,11 +169,10 @@ const handleSearching = (query: string) => {
         }`}
       >
         {search ? (
-          <SearchModal setSearch={setSearch} setSearch={setSearch} onSearch={handleSearching} />
+          <SearchModal setSearch={setSearch} />
         ) : (
           <Header
             conversation={conversation}
-            search={search}
             setSearch={setSearch}
             handleSearch={handleSearch}
             onAvatarClick={() => setSidebarOpen(true)}
@@ -216,7 +191,13 @@ const handleSearching = (query: string) => {
         >
           {Object.entries(groupedMessages).map(([date, msgs]) => (
             <div key={date}>
-              <div className="text-center bg-slate-300/10 w-fit mx-auto py-2 px-4 rounded-full text-xs text-gray-400   my-4">
+              <div
+                className={`text-center w-fit mx-auto py-2 px-4 rounded-full text-xs my-4 ${
+                  theme === "dark"
+                    ? "bg-gray-700 text-gray-300"
+                    : " text-gray-600"
+                }`}
+              >
                 {dayjs(date).isToday()
                   ? "Today"
                   : dayjs(date).isYesterday()
@@ -234,8 +215,6 @@ const handleSearching = (query: string) => {
                     handleEdit={handleEdit}
                     handleCopy={handleCopy}
                     handleDelete={handleDelete}
-                    messages={filteredMessages}
-                    conversation={activeConversation}
                   />
                 ))}
               </AnimatePresence>

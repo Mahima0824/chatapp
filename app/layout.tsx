@@ -6,10 +6,11 @@ import React from "react";
 import ModelProvider from "./Components/ModelProvider";
 import ToastProvider from "@/components/ui/ToastProvider";
 import { ChatProvider } from "./Context/ChatContext";
+import { ThemeProvider } from "./Context/ThemeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
-  subsets: ["latin"], 
+  subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
@@ -30,18 +31,20 @@ export default function RootLayout({
   return (
     <React.StrictMode>
       <html lang="en">
-        <SidebarProvider>
-          <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-            suppressHydrationWarning
-          >
-            <ToastProvider />
-            <ChatProvider>
-              <main className="">{children}</main>
-            </ChatProvider>
-            <ModelProvider />
-          </body>
-        </SidebarProvider>
+        <ThemeProvider>
+          <SidebarProvider>
+            <body
+              className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+              suppressHydrationWarning
+            >
+              <ToastProvider />
+              <ChatProvider>
+                <main className="">{children}</main>
+              </ChatProvider>
+              <ModelProvider />
+            </body>
+          </SidebarProvider>
+        </ThemeProvider>
       </html>
     </React.StrictMode>
   );

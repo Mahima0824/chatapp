@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
@@ -9,6 +9,8 @@ import Group from "./Group";
 import Calls from "./Calls";
 import Status from "./Status";
 import { useSidebar } from "../Context/context";
+import { useTheme } from "../Context/ThemeContext";
+import { cn } from "@/lib/utils";
 
 interface Conversation {
   id: string;
@@ -19,14 +21,20 @@ interface Conversation {
 
 interface StatusUpdate {
   id: string;
-  avatar: string;
   user: string;
+  status: string;
   time: string;
+  avatar: string;
+  image?: string;
+  type?: "video" | "image";
+  viewed: boolean;
 }
 
 interface Call {
   id: string;
   name: string;
+  time: string;
+  type: "audio" | "video";
 }
 
 interface SidebarProps {
@@ -39,7 +47,7 @@ interface SidebarProps {
   onSelectCall: (call: Call) => void;
 }
 
-const   Sidebar: React.FC<SidebarProps> = ({
+const Sidebar: React.FC<SidebarProps> = ({
   conversations,
   statusUpdates,
   onSelectConversation,
@@ -52,33 +60,20 @@ const   Sidebar: React.FC<SidebarProps> = ({
   const [searchTerm, setSearchTerm] = useState<string>("");
   const { setProfilemodel, setSettingmodel } = useSidebar();
 
+  const { theme, toggleTheme } = useTheme();
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
     setSearchTerm("");
   };
-
-  const filteredConversations = conversations.filter((conv) =>
-    conv.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredGroups = groups.filter((group) =>
-    group.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredStatus = statusUpdates.filter((status) =>
-    status.user?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredCalls = calls.filter((call) =>
-    call.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <motion.div
       initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="fixed top-0 left-0 h-screen w-[350px] bg-gray-900 border-r border-gray-800 p-5 shadow-lg"
+      className={`fixed top-0 left-0 h-screen w-[350px] p-5 shadow-lg transition-all ${
+        theme === "dark" ? "glassBg" : "sidebar-light"
+      }`}
     >
       <div className="flex items-center justify-between mb-6">
         <motion.div
@@ -86,45 +81,86 @@ const   Sidebar: React.FC<SidebarProps> = ({
           className="flex items-center gap-4 cursor-pointer"
           onClick={() => setProfilemodel(true)}
         >
-          <Avatar className="w-12 h-12 border-2 border-blue-500 rounded-full">
+          <Avatar
+            className={cn(
+              "w-12 h-12 border-2 rounded-full",
+              theme === "dark" ? "border-white" : "border-[#05445E]"
+            )}
+          >
             <AvatarImage
               src="https://images.unsplash.com/photo-1665970128288-1f872310713e?w=500&auto=format&fit=crop&q=60"
               className="w-full h-full object-cover"
               alt="User"
             />
           </Avatar>
-          <span className="text-white font-semibold text-lg">Mahima</span>
+          <span
+            className={
+              theme === "dark"
+                ? "text-white"
+                : "text-[#05445E] font-semibold text-lg"
+            }
+          >
+            Mahima
+          </span>
         </motion.div>
         <div className="flex gap-3">
-          <IconButton name="PiNotePencil" size={18} onClick={() => setProfilemodel(true)} />
-          <IconButton name="IoSettings" size={18} onClick={() => setSettingmodel(true)} />
+          <IconButton
+            name="PiNotePencil"
+            size={18}
+            onClick={() => setProfilemodel(true)}
+          />
+          <IconButton
+            name="IoSettings"
+            size={18}
+            onClick={() => setSettingmodel(true)}
+          />
+
+          <IconButton
+            name={theme === "dark" ? "IoSunny" : "IoMoon"}
+            size={18}
+            onClick={toggleTheme}
+          />
         </div>
       </div>
 
-      <PlaceholdersAndVanishInput 
+      <PlaceholdersAndVanishInput
         placeholders={["Search..."]}
         onChange={(e) => setSearchTerm(e.target.value)}
+        onSubmit={(e) => e.target}
         arrow={true}
       />
 
-      {/* Tabs */}
-      <div className="flex justify-center mt-5 space-x-4">
+      <div className="flex justify-center mt-5 space-x-3">
         {["Chats", "Groups", "Status", "Calls"].map((tab) => (
           <button
             key={tab}
             onClick={() => handleTabClick(tab)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+            className={cn(
+              "relative px-4 py-2 rounded-full transition-all",
               activeTab === tab
-                ? "bg-gray-700 text-white shadow-md"
-                : "text-gray-400 hover:text-white hover:bg-gray-800"
-            }`}
+                ? theme === "dark"
+                  ? "bg-[#111111] text-white shadow-md"
+                  : "bg-blue-300 text-[#05445E] shadow-md"
+                : theme === "dark"
+                ? "text-white"
+                : "text-[#05445E]"
+            )}
           >
-            {tab}
+            {activeTab === tab && (
+              <motion.div
+                layoutId="clickedbutton"
+                transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
+                className={
+                  theme === "dark"
+                    ? "absolute inset-0 bg-[#111111] rounded-full"
+                    : "absolute inset-0 bg-blue-300 rounded-full"
+                }
+              />
+            )}
+            <span className="relative block text-sm">{tab}</span>
           </button>
         ))}
       </div>
-
-      {/* Content Section */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -132,28 +168,38 @@ const   Sidebar: React.FC<SidebarProps> = ({
         className="mt-5 space-y-3"
       >
         {activeTab === "Chats" &&
-          filteredConversations.map((conv) => (
+          conversations.map((conv) => (
             <motion.div key={conv.id} whileHover={{ scale: 1.03 }}>
-              <Person conversation={conv} onClick={() => onSelectConversation(conv)} />
+              <Person
+                conversation={conv}
+                onClick={() => onSelectConversation(conv)}
+              />
             </motion.div>
           ))}
 
         {activeTab === "Groups" &&
-          filteredGroups.map((group) => (
+          groups.map((group) => (
             <motion.div key={group.id} whileHover={{ scale: 1.03 }}>
-              <Group conversation={group} onClick={() => onSelectConversation(group)} />
+              <Group
+                conversation={group}
+                onClick={() => onSelectConversation(group)}
+              />
             </motion.div>
           ))}
 
         {activeTab === "Status" &&
-          filteredStatus.map((status) => (
+          statusUpdates.map((status) => (
             <motion.div key={status.id} whileHover={{ scale: 1.03 }}>
-              <Status status={status} onClick={() => onSelectStatus(status)} />
+              <Status
+                status={status}
+                viewed={status.viewed}
+                onClick={() => onSelectStatus(status)}
+              />
             </motion.div>
           ))}
 
         {activeTab === "Calls" &&
-          filteredCalls.map((call) => (
+          calls.map((call) => (
             <motion.div key={call.id} whileHover={{ scale: 1.03 }}>
               <Calls call={call} onClick={() => onSelectCall(call)} />
             </motion.div>

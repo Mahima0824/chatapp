@@ -1,5 +1,7 @@
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import React from "react";
+import { useTheme } from "../Context/ThemeContext";
+
 interface PersonProps {
   conversation: {
     id: string;
@@ -9,15 +11,31 @@ interface PersonProps {
   };
   onClick: () => void;
 }
-const Person:React.FC<PersonProps> = ({ conversation, onClick }) => {
+
+const Person: React.FC<PersonProps> = ({ conversation, onClick }) => {
+  const { theme } = useTheme(); 
+
   return (
     <div
       onClick={onClick}
-      className={`w-full p-3  cursor-pointer transition-all duration-200 hover:bg-[#ffffff20]`} >
+      className={`w-full p-3 cursor-pointer rounded-lg  transition-all duration-200 ${
+        theme === "dark" ? "hover:bg-[#222222]" : "hover:bg-[#ffffff20]"
+      }`}
+    >
       <div className="flex items-center gap-6">
         <div className="relative">
-          <Avatar className="w-12 h-12 border-[3px] p-[2px] bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full">
-            <div className="w-full h-full bg-black rounded-full p-[2px]">
+          <Avatar
+            className={`w-12 h-12 border-[3px] p-[2px] rounded-full ${
+              theme === "dark"
+                ? "bg-gradient-to-r from-gray-700 to-gray-900 border-white"
+                : "bg-gradient-to-r from-blue-500 to-indigo-600 border-[#05445E]"
+            }`}
+          >
+            <div
+              className={`w-full h-full rounded-full p-[2px] ${
+                theme === "dark" ? "bg-gray-800" : "bg-black"
+              }`}
+            >
               <AvatarImage
                 src={conversation?.avatar}
                 alt={conversation.name}
@@ -25,14 +43,26 @@ const Person:React.FC<PersonProps> = ({ conversation, onClick }) => {
               />
             </div>
           </Avatar>
-          <div className="w-3 h-3 right-1 bottom-0 z-40 bg-green-500 absolute rounded-full border-2 border-black" />
+          <div
+            className={`w-3 h-3 right-1 bottom-0 z-40 absolute rounded-full border-2 ${
+              theme === "dark" ? "border-gray-800" : "border-black"
+            } bg-green-500`}
+          />
         </div>
 
         <div className="flex-1">
-          <h4 className="text-base text-slate-200 font-semibold">
+          <h4
+            className={`text-base font-semibold ${
+              theme === "dark" ? "text-white" : "text-slate-800"
+            }`}
+          >
             {conversation.name}
           </h4>
-          <span className="text-sm text-slate-400">
+          <span
+            className={`text-sm ${
+              theme === "dark" ? "text-gray-400" : "text-slate-500"
+            }`}
+          >
             {conversation.lastMessage}
           </span>
         </div>

@@ -5,6 +5,7 @@ import StatusWindow from "../Components/StatusWindow";
 import Sidebar from "../Components/Sidebar";
 
 import { motion } from "framer-motion";
+import { useTheme } from "../Context/ThemeContext";
 
 interface Conversation {
   id: string;
@@ -19,17 +20,16 @@ interface Group {
   avatar: string;
   lastMessage: string;
 }
-
-export interface StatusUpdate {  
-  id: string;  
-  user: string;  
-  status: string;  
-  time: string;  
-  avatar: string;  
-  image?: string;  
-  type?: "video" | "image";  
+export interface StatusUpdate {
+  id: string;
+  user: string;
+  status: string;
+  time: string;
+  avatar: string;
+  image?: string;
+  type?: "video" | "image";
+  viewed: boolean;
 }
-
 
 interface Call {
   id: string;
@@ -97,6 +97,7 @@ export default function Home() {
       avatar: "https://i.pravatar.cc/150?img=1",
       image: "https://source.unsplash.com/400x700/?beach",
       type: "image",
+      viewed: false,
     },
     {
       id: "2",
@@ -106,6 +107,7 @@ export default function Home() {
       avatar: "https://i.pravatar.cc/150?img=2",
       image: "https://source.unsplash.com/400x700/?coffee",
       type: "image",
+      viewed: true,
     },
   ];
 
@@ -186,6 +188,7 @@ export default function Home() {
     setSelectedStatus(status);
     setSelectedConversation(null);
   };
+
   const handleSelectCall = (call: Call) => {
     setSelectedCall(call);
     setSelectedConversation(null);
@@ -200,15 +203,18 @@ export default function Home() {
     onSelectStatus: (status: StatusUpdate) => void;
     onSelectCall: (call: Call) => void;
   }
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="flex items-center justify-center h-screen bg-gradient-to-br from-[#1e1e2e] to-[#101018]"
+      className={`flex items-center justify-center h-screen ${
+        theme === "dark" ? "bg-gradient-to-r bg-zinc-950 " : "bg-color"
+      }`}
     >
-      <div className="w-full h-full rounded-2xl text-white glassEffect overflow-hidden">
+      <div className="w-full  h-full rounded-2xl text-white glassEffect overflow-hidden">
         <div className="flex">
           <Sidebar
             conversations={[
@@ -218,7 +224,7 @@ export default function Home() {
                 lastMessage: "Group chat",
               })),
             ]}
-            groups={groups} 
+            groups={groups}
             statusUpdates={statusUpdates}
             calls={calls}
             onSelectConversation={handleSelectConversation}
@@ -226,7 +232,7 @@ export default function Home() {
             onSelectCall={handleSelectCall}
           />
 
-          <div className="ml-[350px] overflow-y-auto min-h-screen w-full">
+       <div className="ml-[350px] overflow-y-auto min-h-screen w-full">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -242,14 +248,10 @@ export default function Home() {
                   sharedDocs={sharedDocs}
                 />
               ) : selectedStatus ? (
-                <StatusWindow
-                  statusUpdates={statusUpdates}
-                  selectedStatus={selectedStatus}
-                  onClose={() => setSelectedStatus(null)}
-                />
+                <StatusWindow statusUpdates={statusUpdates} />
               ) : null}
             </motion.div>
-          </div>
+          </div> 
         </div>
       </div>
     </motion.div>

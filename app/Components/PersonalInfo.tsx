@@ -34,7 +34,7 @@ const PersonalInfo = ({
     setSelectedImage(imgUrl);
     setIsmodel(true);
   };
-  const [activeTab, setActiveTab] = useState("media");
+  const [activeTab, setActiveTab] = useState("Media");
   return (
     <motion.div
       initial={{ opacity: 0, x: 50 }}
@@ -74,19 +74,29 @@ const PersonalInfo = ({
       </div>
       <div className="mt-6">
         <div className="flex justify-around border-b border-gray-600 pb-2">
-          {["media", "links", "docs"].map((tab) => (
+          {["Media", "Links", "Docs"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`text-gray-400 px-4 py-2 ${
-                activeTab === tab ? "text-white border-b-2 border-blue-400" : ""
-              }`}
+              className={`relative px-4 py-2 rounded-full 
+            
+              `}
+              style={{
+                transformStyle: "preserve-3d",
+              }}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {activeTab === tab && (
+                <motion.div
+                  layoutId="clickedbutton"
+                  transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
+                  className={"absolute inset-0  bg-zinc-700 rounded-full "}
+                />
+              )}
+              <span className="relative block text-sm text-white">{tab}</span>
             </button>
           ))}
         </div>
-        {activeTab === "media" && (
+        {activeTab === "Media" && (
           <div className="grid grid-cols-3 gap-2 mt-4">
             {sharedMedia.map((img, index) => (
               <img
@@ -98,7 +108,7 @@ const PersonalInfo = ({
             ))}
           </div>
         )}
-        {activeTab === "links" && (
+        {activeTab === "Links" && (
           <div className="mt-4 space-y-2">
             {sharedLinks.map((link, index) => (
               <a
@@ -115,7 +125,7 @@ const PersonalInfo = ({
           </div>
         )}
 
-        {activeTab === "docs" && (
+        {activeTab === "Docs" && (
           <div className="mt-4 space-y-3">
             {sharedDocs.map((doc, index) => (
               <div

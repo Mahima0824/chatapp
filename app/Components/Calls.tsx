@@ -2,8 +2,9 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import React from "react";
 import IconButton from "./Icon";
 import { Usemodel } from "../Context/context";
+import { useTheme } from "../Context/ThemeContext";
 
-interface call {
+interface Call {
   id: string;
   name: string;
   time: string;
@@ -11,28 +12,45 @@ interface call {
 }
 
 interface CallProps {
-  call: call;
+  call: Call;
+  onClick?: () => void;
 }
+
 const Calls: React.FC<CallProps> = ({ call }) => {
   const { setVideomodel, setVoicemodel } = Usemodel();
+  const { theme } = useTheme();
   return (
     <div
       key={call.id}
       onClick={() => {
         call.type === "video" ? setVideomodel(true) : setVoicemodel(true);
       }}
-      className="flex items-center justify-between p-3 hover:bg-gray-800 rounded-lg cursor-pointer"
+      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+        theme === "dark" ? "hover:bg-[#222222]" : "hover:bg-[#ffffff20]"
+      }`}
     >
       <div className="flex items-center gap-3">
-        <Avatar className="w-12 h-12"> 
+        <Avatar className="w-12 h-12 border-2 rounded-full">
           <AvatarImage
             src="https://i.pravatar.cc/150?img=6"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover rounded-full"
           />
         </Avatar>
         <div>
-          <p className="text-white font-semibold">{call.name}</p>
-          <span className="text-gray-400 text-sm">{call.time}</span>
+          <p
+            className={`${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            } font-semibold`}
+          >
+            {call.name}
+          </p>
+          <span
+            className={`${
+              theme === "dark" ? "text-gray-400" : "text-gray-600"
+            } text-sm`}
+          >
+            {call.time}
+          </span>
         </div>
       </div>
       <IconButton

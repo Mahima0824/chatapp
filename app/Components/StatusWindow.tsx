@@ -9,13 +9,14 @@ import { Transition } from "@headlessui/react";
 import { SuggestFriend } from "./SuggestFriend";
 
 interface StatusUpdate {
-  id: string;
-  user: string;
-  status: string;
-  time: string;
-  avatar: string;
-  media?: string;
-  type: "image" | "video";
+  id: string;  
+  user: string;  
+  status: string;  
+  time: string;  
+  avatar: string;  
+  image?: string;  
+  type?: "video" | "image";  
+  viewed: boolean;  
 }
 
 interface StatusWindowProps {
@@ -112,7 +113,7 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ statusUpdates }) => {
                 <>
                   {statusUpdates[selectedStatusIndex].type === "video" ? (
                     <video
-                      src={statusUpdates[selectedStatusIndex].media}
+                      src={statusUpdates[selectedStatusIndex].image}
                       className="w-full rounded-lg h-full object-cover"
                       autoPlay
                       loop
@@ -120,7 +121,7 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ statusUpdates }) => {
                     />
                   ) : (
                     <img
-                      src={statusUpdates[selectedStatusIndex].media}
+                      src={statusUpdates[selectedStatusIndex].image}
                       alt="Status"
                       className="w-full rounded-lg h-full object-cover"
                     />
