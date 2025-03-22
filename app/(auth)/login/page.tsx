@@ -1,51 +1,46 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { FaEnvelope, FaLock } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
+import { Formik, Field, Form, ErrorMessage } from "formik"; // Import Formik
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useApiContext } from "@/app/Context/Api";
 
 const Login = () => {
+  const { loginUser } = useApiContext(); 
+
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
-  const [error, setError] = useState("");
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(""); 
-  };
-
-  const validateForm = () => {
-    const { email, password } = formData;
+  // Form validation function
+  const validateForm = (values: any) => {
+    const errors: { [key: string]: string } = {};
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return "Please enter a valid email address.";
+    if (!values.email || !emailRegex.test(values.email)) {
+      errors.email = "Please enter a valid email address.";
     }
 
-    if (password.length < 6) {
-      return "Password must be at least 6 characters.";
+    if (!values.password || values.password.length < 6) {
+      errors.password = "Password must be at least 6 characters.";
     }
 
-    return null; 
+    return errors;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const validationError = validateForm();
+  // Handle submit function
 
-    if (validationError) {
-      setError(validationError);
-      return;
+  const handleSubmit = async (values: any, { setSubmitting }: any) => {
+    try {
+      await loginUser(values); // Call the loginUser function from context
+      // After login, the user will be redirected to the protected page
+    } catch (error) {
+      // Handle error
+    } finally {
+      setSubmitting(false);
     }
-
-     
-    router.push("/steps"); 
   };
 
   return (
@@ -56,52 +51,73 @@ const Login = () => {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="bg-white bg-opacity-10 max-w-full w-[500px] mx-auto backdrop-blur-lg px-10 py-8 rounded-3xl shadow-2xl border border-gray-600"
       >
-        <h2 className="text-3xl font-bold text-white text-center mb-6">
-          Login
-        </h2>
-        <form className="flex flex-col space-y-5" onSubmit={handleSubmit}>
-          <div className="relative">
-            <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-300" />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full pl-12 p-3 bg-transparent border border-gray-500 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            />
-          </div>
+        <h2 className="text-3xl font-bold text-white text-center mb-6">Login</h2>
+        
+        {/* Formik Form */}
+        <Formik
+          initialValues={{ email: "", password: "" }}
+          validate={validateForm}
+          onSubmit={handleSubmit}
+        >
+          {({ isSubmitting }) => (
+            <Form className="flex flex-col space-y-5">
+              {/* Email Field */}
+              <div className="relative">
+                <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-300" />
+                <Field
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  className="w-full pl-12 p-3 bg-transparent border border-gray-500 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                <ErrorMessage
+                  name="email"
+                  component="p"
+                  className="text-red-400 text-sm"
+                />
+              </div>
 
-          <div className="relative">
-            <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-300" />
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full pl-12 p-3 bg-transparent border border-gray-500 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            />
-          </div>
+              {/* Password Field */}
+              <div className="relative">
+                <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-300" />
+                <Field
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  className="w-full pl-12 p-3 bg-transparent border border-gray-500 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+                <ErrorMessage
+                  name="password"
+                  component="p"
+                  className="text-red-400 text-sm"
+                />
+              </div>
 
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            whileHover={{
-              scale: 1,
-              boxShadow: "0px 0px 10px rgba(0, 131, 255, 0.7)",
-            }}
-            type="submit"
-            className="w-full p-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold rounded-lg transition-all"
-          >
-            Login
-          </motion.button>
-        </form>
+              {/* Submit Button */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                whileHover={{
+                  scale: 1,
+                  boxShadow: "0px 0px 10px rgba(0, 131, 255, 0.7)",
+                }}
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full p-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold rounded-lg transition-all"
+              >
+                {isSubmitting ? "Logging in..." : "Login"}
+              </motion.button>
+            </Form>
+          )}
+        </Formik>
+
+        {/* OR Divider */}
         <div className="flex items-center my-4">
           <div className="flex-grow border-t border-gray-600"></div>
           <span className="mx-3 text-gray-400">OR</span>
           <div className="flex-grow border-t border-gray-600"></div>
         </div>
+
+        {/* Google Button (Placeholder) */}
         <div className="flex items-center gap-2 w-fit mx-auto">
           <motion.button
             whileTap={{ scale: 0.95 }}
@@ -114,6 +130,7 @@ const Login = () => {
             <FcGoogle className="text-xl" />
           </motion.button>
         </div>
+
         <p className="text-gray-300 text-sm text-center mt-4">
           Don't have an account?{" "}
           <a href="/signUp" className="text-blue-400 hover:underline">

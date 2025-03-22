@@ -2,14 +2,17 @@
 import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaUser, FaCamera } from "react-icons/fa";
+import { useApiContext } from "../Context/Api";
 
 const ProfileSetup = () => {
   const router = useRouter();
+  const { useData, setUseData } = useApiContext();
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  console.log(useData);
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];

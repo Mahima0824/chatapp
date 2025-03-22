@@ -42,7 +42,7 @@ interface Conversation {
 
 interface ChatWindowProps {
   conversation: Conversation;
-  messages: MessageType[];
+  messages?: any[];
   sharedMedia: string[];
   sharedLinks: string[];
   sharedDocs: { name: string; url: string }[];
@@ -50,12 +50,12 @@ interface ChatWindowProps {
 
 const ChatWindow: React.FC<ChatWindowProps> = ({
   conversation,
-  messages: initialMessages,
+  messages: any,
   sharedMedia,
   sharedLinks,
   sharedDocs,
 }) => {
-  const [messages, setMessages] = useState<MessageType[]>(initialMessages);
+  const [messages, setMessages] = useState<any[]>([]);
   const [newestMessageId, setNewestMessageId] = useState<number | null>(null);
   const [message, setMessage] = useState<string>("");
   const [showPicker, setShowPicker] = useState<boolean>(false);

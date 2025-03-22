@@ -7,19 +7,7 @@ import { useSidebar } from "../Context/context";
 import { IoCheckmark, IoCheckmarkDone } from "react-icons/io5";
 
 interface MessageProps {
-  message: {
-    id: number;
-    text: string;
-    sender: "sender" | "receiver";
-    time: string;
-    file?: {
-      name: string;
-      type: string;
-      url: any;
-      width?: number;
-      height?: number;
-    };
-  };
+  message: any;
   isOwnMessage: boolean;
   isNewestMessage: boolean;
   setNewestMessageId: (id: number | null) => void;
