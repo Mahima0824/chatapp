@@ -41,7 +41,7 @@ const Person = ({ conversation, onClick }: any) => {
             className={`w-3 h-3 right-1 bottom-0 z-40 absolute rounded-full border-2 ${
               theme === "dark" ? "border-gray-800" : "border-black"
             } 
-            ${conversation.onlineStatus ? "bg-green-500" : "bg-red-700"}    `}
+            ${conversation?.onlineStatus ? "bg-green-500" : "bg-red-700"}    `}
           />
         </div>
 
@@ -67,6 +67,7 @@ const Person = ({ conversation, onClick }: any) => {
 };
 
 export default Person;
+
 
 export const SerchPerson = ({
   conversation,

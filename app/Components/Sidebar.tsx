@@ -54,12 +54,14 @@ const Sidebar = ({
   const { useData, getUser, getAllUser, getUserFriends } = useApiContext();
   const [friendlist, setFriendlist] = useState([]);
   const [serchfri, setSerchfri] = useState<any>([]);
+  
   const getuserData = async () => {
     const user = await getUser();
     const Friendlistres = await getUserFriends();
     setFriendlist(Friendlistres);
     setImage(user?.image || null);
   };
+
   const searchfriendfn = async () => {
     let fridata = await getAllUser();
 
@@ -76,6 +78,7 @@ const Sidebar = ({
   }, []);
 
   const { theme, toggleTheme } = useTheme();
+
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
     setSearchTerm("");
@@ -84,6 +87,7 @@ const Sidebar = ({
   const friendReques = (e: any) => {
     console.log(e, "eeeeeeeeeeeeeeee");
   };
+
   return (
     <motion.div
       initial={{ x: -100, opacity: 0 }}
@@ -136,7 +140,6 @@ const Sidebar = ({
             size={18}
             onClick={() => setSettingmodel(true)}
           />
-
           <IconButton
             name={theme === "dark" ? "IoSunny" : "IoMoon"}
             size={18}
@@ -147,8 +150,8 @@ const Sidebar = ({
 
       <PlaceholdersAndVanishInput
         placeholders={["Search friend......"]}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        onSubmit={(e) => searchfriendfn()}
+        onChange={(e: any) => setSearchTerm(e.target.value)}
+        onSubmit={(e: any) => searchfriendfn()}
         arrow={true}
       />
 
@@ -192,44 +195,46 @@ const Sidebar = ({
         {activeTab === "Chats" && (
           <>
             {/* First list of friends (conversations) */}
-            {serchfri?.map(({ conv, index }: any) => (
-              <motion.div
-                className="border-b-2 border-dashed border-white"
-                key={index}
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-yellow-300">Serch result</p>
+            {serchfri?.length > 0 &&
+              serchfri?.map(({ conv }: any) => (
+                <motion.div
+                  className="border-b-2 border-dashed border-white"
+                  key={conv?._id} // Unique key for each search result
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-yellow-300">Serch result</p>
 
-                  <p
-                    onClick={() => setSerchfri([])}
-                    className="capitalize cursor-pointer text-red-400"
-                  >
-                    clear
-                  </p>
-                </div>
-                <SerchPerson
-                  conversation={conv}
-                  onClick={friendReques}
-                  useData={useData}
-                  searchfriendfn={searchfriendfn}
-                />
-              </motion.div>
-            ))}
+                    <p
+                      onClick={() => setSerchfri([])}
+                      className="capitalize cursor-pointer text-red-400"
+                    >
+                      clear
+                    </p>
+                  </div>
+                  <SerchPerson
+                    conversation={conv}
+                    onClick={friendReques}
+                    useData={useData}
+                    searchfriendfn={searchfriendfn}
+                  />
+                </motion.div>
+              ))}
 
             {/* Second list of friends (conversations) */}
-            {friendlist?.map(({ conv, index }: any) => (
-              <motion.div key={index} whileHover={{ scale: 1.03 }}>
-                <Person
-                  conversation={conv}
-                  onClick={() => onSelectConversation(conv?._id)}
-                />
-              </motion.div>
-            ))}
+            {friendlist.length > 0 &&
+              friendlist?.map(({ conv }: any) => (
+                <motion.div key={conv?._id} whileHover={{ scale: 1.03 }}>
+                  <Person
+                    conversation={conv}
+                    onClick={() => onSelectConversation(conv?._id)}
+                  />
+                </motion.div>
+              ))}
           </>
         )}
 
         {activeTab === "Groups" &&
-          groups.map((group: any) => (
+          groups?.map((group: any) => (
             <motion.div key={group.id} whileHover={{ scale: 1.03 }}>
               <Group
                 conversation={group}
@@ -239,7 +244,7 @@ const Sidebar = ({
           ))}
 
         {activeTab === "Status" &&
-          statusUpdates.map((status: any) => (
+          statusUpdates?.map((status: any) => (
             <motion.div key={status.id} whileHover={{ scale: 1.03 }}>
               <Status
                 status={status}
@@ -250,7 +255,7 @@ const Sidebar = ({
           ))}
 
         {activeTab === "Calls" &&
-          calls.map((call: any) => (
+          calls?.map((call: any) => (
             <motion.div key={call.id} whileHover={{ scale: 1.03 }}>
               <Calls call={call} onClick={() => onSelectCall(call)} />
             </motion.div>

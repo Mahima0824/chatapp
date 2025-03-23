@@ -4,7 +4,10 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
-const NEXT_BACKEND_URL = "http://localhost:5000/api/v1"; // Replace with your actual backend URL
+let local = "http://localhost:5000/api/v1";
+let live = "https://chatapp-backend-6i7e.onrender.com/api/v1";
+
+const NEXT_BACKEND_URL = live;
 
 interface ApiContextType {
   registerUser: (formData: any) => Promise<any>;
