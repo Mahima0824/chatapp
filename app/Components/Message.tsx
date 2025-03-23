@@ -18,7 +18,7 @@ interface MessageProps {
 
 const easing = cubicBezier(0.35, 0.17, 0.3, 0.86);
 
-const Message: React.FC<MessageProps> = ({
+const Message = ({
   message,
   isOwnMessage,
   isNewestMessage,
@@ -26,7 +26,8 @@ const Message: React.FC<MessageProps> = ({
   handleEdit,
   handleCopy,
   handleDelete,
-}) => {
+  
+}: any) => {
   const isEmojiOnly = /^<img src=".*?" alt="emoji".*?>$/.test(message.text);
   const isImage = message.file && message.file.type.startsWith("image/");
   const isPdf = message.file && message.file.type === "application/pdf";
@@ -79,7 +80,7 @@ const Message: React.FC<MessageProps> = ({
           <div>
             {isEmojiOnly ? (
               <span
-                dangerouslySetInnerHTML={{ __html: message.text }}
+                dangerouslySetInnerHTML={{ __html: message.message }}
                 className="w-20 h-20 block object-center object-cover"
               ></span>
             ) : isPdf ? (
@@ -117,7 +118,7 @@ const Message: React.FC<MessageProps> = ({
             ) : (
               <p
                 className="text-[13px]"
-                dangerouslySetInnerHTML={{ __html: message.text }}
+                dangerouslySetInnerHTML={{ __html: message.message }}
               ></p>
             )}
           </div>
@@ -142,7 +143,7 @@ const Message: React.FC<MessageProps> = ({
               <Menu.Item>
                 {({ active }) => (
                   <button
-                    onClick={() => handleCopy(message)}
+                    onClick={() => handleCopy(message.message)}
                     className={`${
                       active ? "bg-blue-500 text-white" : ""
                     } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
@@ -154,7 +155,7 @@ const Message: React.FC<MessageProps> = ({
               <Menu.Item>
                 {({ active }) => (
                   <button
-                    onClick={() => handleEdit(message)}
+                    onClick={() => handleEdit(message?._id)}
                     className={`${
                       active ? "bg-yellow-500 text-white" : ""
                     } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
@@ -166,7 +167,7 @@ const Message: React.FC<MessageProps> = ({
               <Menu.Item>
                 {({ active }) => (
                   <button
-                    onClick={() => handleDelete(message.id)}
+                    onClick={() => handleDelete(message._id)}
                     className={`${
                       active ? "bg-red-600 text-white" : ""
                     } group flex w-full items-center rounded-md px-2 py-2 text-sm`}

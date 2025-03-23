@@ -4,13 +4,14 @@ import { motion } from "framer-motion";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
 import IconButton from "./Icon";
-import Person from "./Person";
+import Person, { SerchPerson } from "./Person";
 import Group from "./Group";
 import Calls from "./Calls";
 import Status from "./Status";
 import { useSidebar } from "../Context/context";
 import { useTheme } from "../Context/ThemeContext";
 import { cn } from "@/lib/utils";
+import { useApiContext } from "../Context/Api";
 
 interface Conversation {
   id: string;
@@ -37,17 +38,7 @@ interface Call {
   type: "audio" | "video";
 }
 
-interface SidebarProps {
-  conversations: Conversation[];
-  statusUpdates: StatusUpdate[];
-  onSelectConversation: (conv: Conversation) => void;
-  onSelectStatus: (status: StatusUpdate) => void;
-  groups: Conversation[];
-  calls: Call[];
-  onSelectCall: (call: Call) => void;
-}
-
-const Sidebar: React.FC<SidebarProps> = ({
+const Sidebar = ({
   conversations,
   statusUpdates,
   onSelectConversation,
@@ -55,10 +46,34 @@ const Sidebar: React.FC<SidebarProps> = ({
   groups,
   calls,
   onSelectCall,
-}) => {
+}: any) => {
   const [activeTab, setActiveTab] = useState<string>("Chats");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const { setProfilemodel, setSettingmodel } = useSidebar();
+  const [image, setImage] = useState<string | null>(null);
+  const { useData, getUser, getAllUser, getUserFriends } = useApiContext();
+  const [friendlist, setFriendlist] = useState([]);
+  const [serchfri, setSerchfri] = useState<any>([]);
+  const getuserData = async () => {
+    const user = await getUser();
+    const Friendlistres = await getUserFriends();
+    setFriendlist(Friendlistres);
+    setImage(user?.image || null);
+  };
+  const searchfriendfn = async () => {
+    let fridata = await getAllUser();
+
+    if (fridata.length > 0) {
+      let fout = fridata
+        .filter((item: any) => item.username.includes(searchTerm))
+        .filter((item: any) => item._id !== useData._id);
+      setSerchfri(fout);
+    }
+  };
+
+  useEffect(() => {
+    getuserData();
+  }, []);
 
   const { theme, toggleTheme } = useTheme();
   const handleTabClick = (tab: string) => {
@@ -66,6 +81,9 @@ const Sidebar: React.FC<SidebarProps> = ({
     setSearchTerm("");
   };
 
+  const friendReques = (e: any) => {
+    console.log(e, "eeeeeeeeeeeeeeee");
+  };
   return (
     <motion.div
       initial={{ x: -100, opacity: 0 }}
@@ -88,7 +106,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             )}
           >
             <AvatarImage
-              src="https://images.unsplash.com/photo-1665970128288-1f872310713e?w=500&auto=format&fit=crop&q=60"
+              src={
+                useData?.image
+                  ? useData?.image
+                  : "https://images.unsplash.com/photo-1665970128288-1f872310713e?w=500&auto=format&fit=crop&q=60"
+              }
               className="w-full h-full object-cover"
               alt="User"
             />
@@ -100,7 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 : "text-[#05445E] font-semibold text-lg"
             }
           >
-            Mahima
+            {useData?.username}
           </span>
         </motion.div>
         <div className="flex gap-3">
@@ -124,9 +146,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <PlaceholdersAndVanishInput
-        placeholders={["Search..."]}
+        placeholders={["Search friend......"]}
         onChange={(e) => setSearchTerm(e.target.value)}
-        onSubmit={(e) => e.target}
+        onSubmit={(e) => searchfriendfn()}
         arrow={true}
       />
 
@@ -167,18 +189,47 @@ const Sidebar: React.FC<SidebarProps> = ({
         transition={{ duration: 0.3 }}
         className="mt-5 space-y-3"
       >
-        {activeTab === "Chats" &&
-          conversations.map((conv) => (
-            <motion.div key={conv.id} whileHover={{ scale: 1.03 }}>
-              <Person
-                conversation={conv}
-                onClick={() => onSelectConversation(conv)}
-              />
-            </motion.div>
-          ))}
+        {activeTab === "Chats" && (
+          <>
+            {/* First list of friends (conversations) */}
+            {serchfri?.map(({ conv, index }: any) => (
+              <motion.div
+                className="border-b-2 border-dashed border-white"
+                key={index}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-yellow-300">Serch result</p>
+
+                  <p
+                    onClick={() => setSerchfri([])}
+                    className="capitalize cursor-pointer text-red-400"
+                  >
+                    clear
+                  </p>
+                </div>
+                <SerchPerson
+                  conversation={conv}
+                  onClick={friendReques}
+                  useData={useData}
+                  searchfriendfn={searchfriendfn}
+                />
+              </motion.div>
+            ))}
+
+            {/* Second list of friends (conversations) */}
+            {friendlist?.map(({ conv, index }: any) => (
+              <motion.div key={index} whileHover={{ scale: 1.03 }}>
+                <Person
+                  conversation={conv}
+                  onClick={() => onSelectConversation(conv?._id)}
+                />
+              </motion.div>
+            ))}
+          </>
+        )}
 
         {activeTab === "Groups" &&
-          groups.map((group) => (
+          groups.map((group: any) => (
             <motion.div key={group.id} whileHover={{ scale: 1.03 }}>
               <Group
                 conversation={group}
@@ -188,7 +239,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           ))}
 
         {activeTab === "Status" &&
-          statusUpdates.map((status) => (
+          statusUpdates.map((status: any) => (
             <motion.div key={status.id} whileHover={{ scale: 1.03 }}>
               <Status
                 status={status}
@@ -199,7 +250,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           ))}
 
         {activeTab === "Calls" &&
-          calls.map((call) => (
+          calls.map((call: any) => (
             <motion.div key={call.id} whileHover={{ scale: 1.03 }}>
               <Calls call={call} onClick={() => onSelectCall(call)} />
             </motion.div>

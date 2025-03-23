@@ -4,9 +4,9 @@ import { useSidebar } from "../Context/context";
 import { X } from "lucide-react";
 
 const PersonalInfo = ({
-  conversation,
   setSidebarOpen,
   sharedMedia,
+  friendData,
   sharedLinks,
   sharedDocs,
   setShowWallpaperModal,
@@ -15,19 +15,7 @@ const PersonalInfo = ({
   setCustomColor,
   handleWallpaperUpload,
   wallpaperInputRef,
-}: {
-  sharedMedia: string[];
-  sharedLinks: string[];
-  sharedDocs: { name: string; url: string }[];
-  conversation: any;
-  setSidebarOpen: any;
-  setShowWallpaperModal: any;
-  showWallpaperModal: boolean;
-  handleColorChange: any;
-  setCustomColor: any;
-  handleWallpaperUpload: any;
-  wallpaperInputRef: any;
-}) => {
+}: any) => {
   const { setIsmodel, setSelectedImage } = useSidebar();
 
   const openImageModal = (imgUrl: string) => {
@@ -51,12 +39,12 @@ const PersonalInfo = ({
 
       <div className="text-center">
         <img
-          src={conversation.avatar}
-          alt={conversation.name}
+          src={friendData?.image}
+          alt={friendData?.username}
           className="w-24 h-24 rounded-full mx-auto shadow-md"
         />
         <h2 className="text-white text-lg font-semibold mt-4">
-          {conversation.name}
+          {friendData?.username}
         </h2>
       </div>
       <div className="mt-4 text-gray-300 text-sm">
@@ -98,7 +86,7 @@ const PersonalInfo = ({
         </div>
         {activeTab === "Media" && (
           <div className="grid grid-cols-3 gap-2 mt-4">
-            {sharedMedia.map((img, index) => (
+            {sharedMedia.map(({ img, index }: any) => (
               <img
                 key={index}
                 src={img}
@@ -110,7 +98,7 @@ const PersonalInfo = ({
         )}
         {activeTab === "Links" && (
           <div className="mt-4 space-y-2">
-            {sharedLinks.map((link, index) => (
+            {sharedLinks.map(({ link, index }: any) => (
               <a
                 key={index}
                 href={link}
@@ -127,7 +115,7 @@ const PersonalInfo = ({
 
         {activeTab === "Docs" && (
           <div className="mt-4 space-y-3">
-            {sharedDocs.map((doc, index) => (
+            {sharedDocs.map(({ doc, index }: any) => (
               <div
                 key={index}
                 className="flex justify-between items-center bg-zinc-700 p-3 rounded-lg hover:bg-zinc-600 transition"

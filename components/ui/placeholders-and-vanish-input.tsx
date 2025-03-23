@@ -11,12 +11,7 @@ export function PlaceholdersAndVanishInput({
   onChange,
   onSubmit,
   arrow,
-}: {
-  placeholders: string[];
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  arrow?: boolean;
-}) {
+}: any) {
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -184,7 +179,7 @@ export function PlaceholdersAndVanishInput({
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    let renewText;
+    let renewText:any;
     if (urlRegex.test(renewText)) {
       renewText = formatMessageWithLinks(renewText);
       setValue(renewText);

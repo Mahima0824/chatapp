@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ChatWindow from "../Components/ChatWindow";
 import StatusWindow from "../Components/StatusWindow";
 import Sidebar from "../Components/Sidebar";
 
 import { motion } from "framer-motion";
 import { useTheme } from "../Context/ThemeContext";
+import { useApiContext } from "../Context/Api";
 
 interface Conversation {
   id: string;
@@ -52,41 +53,6 @@ export default function Home() {
   const [selectedStatus, setSelectedStatus] = useState<StatusUpdate | null>(
     null
   );
-
-  const [messages, setMessages] = useState<{ [key: string]: MessageType[] }>({
-    "1": [
-      {
-        id: 1,
-        userId: "user123",
-        text: "Hey, John!",
-        sender: "sender",
-        time: "10:00 AM",
-      },
-      {
-        id: 2,
-        userId: "1",
-        text: "Hey, how are you?",
-        sender: "receiver",
-        time: "10:05 AM",
-      },
-    ],
-    "2": [
-      {
-        id: 1,
-        userId: "user123",
-        text: "Hi, Jane!",
-        sender: "sender",
-        time: "11:00 AM",
-      },
-      {
-        id: 2,
-        userId: "2",
-        text: "Let’s catch up soon!",
-        sender: "receiver",
-        time: "11:15 AM",
-      },
-    ],
-  });
 
   const statusUpdates: StatusUpdate[] = [
     {
@@ -204,6 +170,18 @@ export default function Home() {
     onSelectCall: (call: Call) => void;
   }
   const { theme, toggleTheme } = useTheme();
+  const { useData, getUser, getAllUser, getUserFriends } = useApiContext();
+
+  const [userinfo, setUserinfo] = useState<any>();
+
+  const getuserData = async () => {
+    const user = await getUser();
+    setUserinfo(user);
+  };
+
+  useEffect(() => {
+    getuserData();
+  }, []);
 
   return (
     <motion.div
@@ -232,7 +210,7 @@ export default function Home() {
             onSelectCall={handleSelectCall}
           />
 
-       <div className="ml-[350px] overflow-y-auto min-h-screen w-full">
+          <div className="ml-[350px] overflow-y-auto min-h-screen w-full">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -242,16 +220,16 @@ export default function Home() {
               {selectedConversation ? (
                 <ChatWindow
                   conversation={selectedConversation}
-                  messages={messages[selectedConversation.id] || []}
                   sharedMedia={sharedMedia}
                   sharedLinks={sharedLinks}
+                  userinfo={userinfo}
                   sharedDocs={sharedDocs}
                 />
               ) : selectedStatus ? (
                 <StatusWindow statusUpdates={statusUpdates} />
               ) : null}
             </motion.div>
-          </div> 
+          </div>
         </div>
       </div>
     </motion.div>

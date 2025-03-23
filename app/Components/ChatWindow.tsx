@@ -15,114 +15,137 @@ import { useTheme } from "../Context/ThemeContext";
 import { successToast } from "@/components/ui/Toast";
 import ChatInput from "./ChatInput";
 import PersonalInfo from "./PersonalInfo";
+import { useApiContext } from "../Context/Api";
+import io from "socket.io-client"; // Import socket.io
 
 dayjs.extend(relativeTime);
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 
-interface MessageType {
-  id: number;
-  text: string;
-  sender: "sender" | "receiver";
-  time: string;
-  conversationId: string;
-  date: string;
-  file?: {
-    name: string;
-    type: string;
-    url: string;
-  } | null;
-}
+const socket = io("http://localhost:5000"); // Connect to the socket server
 
-interface Conversation {
-  id: string;
-  name: string;
-  avatar: string;
-}
-
-interface ChatWindowProps {
-  conversation: Conversation;
-  messages?: any[];
-  sharedMedia: string[];
-  sharedLinks: string[];
-  sharedDocs: { name: string; url: string }[];
-}
-
-const ChatWindow: React.FC<ChatWindowProps> = ({
+const ChatWindow = ({
   conversation,
-  messages: any,
   sharedMedia,
   sharedLinks,
   sharedDocs,
-}) => {
-  const [messages, setMessages] = useState<any[]>([]);
-  const [newestMessageId, setNewestMessageId] = useState<number | null>(null);
-  const [message, setMessage] = useState<string>("");
-  const [showPicker, setShowPicker] = useState<boolean>(false);
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  userinfo,
+}: any) => {
+  const [messages, setMessages] = useState<any[]>([]); // Holds all messages in the conversation
+  const [newestMessageId, setNewestMessageId] = useState<number | null>(null); // Tracks the most recent message
+  const [showPicker, setShowPicker] = useState<boolean>(false); // For emoji picker toggle
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false); // For toggling sidebar
+  const messagesEndRef = useRef<HTMLDivElement>(null); // To scroll to the latest message
   const { theme } = useTheme();
+  const [message, setMessage] = useState<string>(""); // Holds the input message
+  const { getconvertion, SendMsg, getUserFriends } = useApiContext();
+  const [friend, setFriend] = useState<any>([]);
+  // Fetch chat history when component mounts
+  const getChat = async () => {
+    try {
+      // Fetch the conversion messages
+      let res = await getconvertion({ reciverId: conversation });
+      // Fetch user friends
+      let fridata = await getUserFriends();
 
+      if (Array.isArray(fridata) && fridata.length > 0) {
+        let friendData: any = fridata.filter(
+          (item) => item._id === conversation
+        );
+
+        if (friendData.length > 0) {
+          setFriend(friendData);
+        } else {
+          console.log("No friend found for the given conversation ID.");
+        }
+      } else {
+        console.error("No friends data found or fridata is not an array");
+      }
+
+      // Set the messages from the conversion API response
+      setMessages(res?.msg);
+    } catch (error) {
+      console.error("Error fetching chat data:", error);
+    }
+  };
+
+  useEffect(() => {
+    getChat(); // Get chat history on initial load
+  }, [conversation]);
+
+  // Scroll to the latest message when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = (
-    textMessage: string,
-    file: MessageType["file"] = null
-  ): void => {
-    if (textMessage?.trim() || file) {
-      const newMessage: MessageType = {
-        id: messages.length + 1,
-        text: textMessage,
-        sender: "sender",
-        time: dayjs().format("h:mm A"),
-        date: dayjs().format("YYYY-MM-DD"),
-        conversationId: conversation.id,
-        file,
-      };
-      setNewestMessageId(newMessage.id);
-      setMessages([...messages, newMessage]);
+  // Join the room when the component mounts
+  useEffect(() => {
+    if (conversation) {
+      socket.emit("join_room", conversation); // Joining the room with the conversationId as roomId
     }
-    setMessage("");
+
+    // Listen for new messages coming from the server
+    socket.on("receive_message", (data) => {
+      console.log("New message received:", data);
+
+      // Only update the messages if the message belongs to the current conversation
+      if (data.receiver === conversation || data.sender === conversation) {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            message: data.message,
+            senderId: data.sender,
+            receiverId: data.receiver,
+            timestamp: data.timestamp,
+          },
+        ]);
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      socket.off("receive_message");
+    };
+  }, [conversation]);
+
+  // Send message function
+  const handleSend = (e: string): void => {
+    if (e.trim()) {
+      const newMessage = {
+        message: e,
+        senderId: userinfo?._id,
+        receiverId: conversation, // Assuming receiverId is the conversation ID
+      };
+
+      // Emit to the backend to save the message and broadcast to the receiver
+      socket.emit("send_message", newMessage);
+      getChat();
+      setMessage(""); // Clear the input field after sending
+    }
   };
 
+  // Handle emoji selection
   const handleEmojiSelect = (selectedEmoji: EmojiType) => {
     const emojiMessage = `<img src="${selectedEmoji.url}" alt="emoji" class="w-full h-full inline-block" />`;
     handleSend(emojiMessage);
-    setShowPicker(false);
+    setShowPicker(false); // Hide emoji picker
   };
 
+  // Handle file upload (if necessary)
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const fileUrl = URL.createObjectURL(file);
-      const fileMessage = {
-        name: file.name,
-        type: file.type,
-        url: fileUrl,
-      };
-
-      handleSend("", fileMessage);
-    }
+    // Handle file upload here if necessary
   };
 
-  const groupedMessages: Record<string, MessageType[]> = messages
-    .filter((msg) => msg.conversationId === conversation.id)
-    .reduce((acc, msg) => {
-      if (!acc[msg.date]) acc[msg.date] = [];
-      acc[msg.date].push(msg);
-      return acc;
-    }, {} as Record<string, MessageType[]>);
-
+  // For searching
   const [search, setSearch] = useState(false);
   const handleSearch = () => setSearch(true);
 
+  // Handle wallpaper (background customization)
   const wallpaperInputRef = useRef<HTMLInputElement>(null);
   const [wallpaper, setWallpaper] = useState<string>("");
   const [showWallpaperModal, setShowWallpaperModal] = useState(false);
   const [customColor, setCustomColor] = useState<string>("#000000");
-  const { editmodel, setEditmodel } = useSidebar();
 
   const handleWallpaperUpload = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -140,18 +163,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setShowWallpaperModal(false);
   };
 
-  const handleEdit = (msg: MessageType) => {
-    setMessage(msg.text);
-    setEditmodel(true);
+  const handleEdit = (msg: any) => {
+    // Handle edit logic here
   };
 
-  const handleCopy = (msg: MessageType) => {
+  const handleCopy = (msg: any) => {
     navigator.clipboard.writeText(msg.text);
     successToast("Copied to clipboard!");
   };
 
   const handleDelete = (msgId: number) => {
-    setMessages(messages.filter((m) => m.id !== msgId));
+    // Handle delete logic here
   };
 
   return (
@@ -172,10 +194,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           <SearchModal setSearch={setSearch} />
         ) : (
           <Header
-            conversation={conversation}
             setSearch={setSearch}
             handleSearch={handleSearch}
             onAvatarClick={() => setSidebarOpen(true)}
+            friendData={friend[0]}
           />
         )}
 
@@ -189,37 +211,19 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             backgroundPosition: "center",
           }}
         >
-          {Object.entries(groupedMessages).map(([date, msgs]) => (
-            <div key={date}>
-              <div
-                className={`text-center w-fit mx-auto py-2 px-4 rounded-full text-xs my-4 ${
-                  theme === "dark"
-                    ? "bg-gray-700 text-gray-300"
-                    : " text-gray-600"
-                }`}
-              >
-                {dayjs(date).isToday()
-                  ? "Today"
-                  : dayjs(date).isYesterday()
-                  ? "Yesterday"
-                  : dayjs(date).format("DD MMM, YYYY")}
-              </div>
-              <AnimatePresence>
-                {msgs.map((msg) => (
-                  <Message
-                    key={msg.id}
-                    message={msg}
-                    isOwnMessage={msg.sender === "sender"}
-                    isNewestMessage={msg.id === newestMessageId}
-                    setNewestMessageId={setNewestMessageId}
-                    handleEdit={handleEdit}
-                    handleCopy={handleCopy}
-                    handleDelete={handleDelete}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-          ))}
+          {/* Render messages */}
+          <AnimatePresence>
+            {messages?.map((msg, index) => (
+              <Message
+                key={index} // Use timestamp as a unique key
+                message={msg}
+                isOwnMessage={msg.sender === userinfo?._id}
+                handleEdit={handleEdit}
+                handleCopy={handleCopy}
+                handleDelete={handleDelete}
+              />
+            ))}
+          </AnimatePresence>
           <div ref={messagesEndRef} />
         </div>
         <ChatInput
@@ -231,8 +235,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
       {sidebarOpen && (
         <PersonalInfo
-          conversation={conversation}
           setSidebarOpen={setSidebarOpen}
+          friendData={friend[0]}
+
           sharedMedia={sharedMedia}
           sharedLinks={sharedLinks}
           sharedDocs={sharedDocs}

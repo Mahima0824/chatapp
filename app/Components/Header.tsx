@@ -20,27 +20,27 @@ interface HeaderProps {
   onAvatarClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({
-  conversation,
+const Header = ({
   search,
   setSearch,
   handleSearch,
   onAvatarClick,
-}) => {
-  if (!conversation) return null;
+  friendData,
+}: any) => {
 
   const { setVideomodel, setVoicemodel } = Usemodel();
   const { theme } = useTheme();
 
+  console.log(friendData,'friendData=============')
   return (
     <>
       <div
         className={`py-3 px-8 border-b shadow-lg backdrop-blur-md z-[99] transition-all duration-300 
           ${
-          theme === "dark"
-            ? "glassBg border-gray-700 text-white"
-            : "bg-white/30 border-gray-300 text-black backdrop-blur-lg shadow-md"
-        }
+            theme === "dark"
+              ? "glassBg border-gray-700 text-white"
+              : "bg-white/30 border-gray-300 text-black backdrop-blur-lg shadow-md"
+          }
         `}
       >
         <div className="flex items-center justify-between">
@@ -51,9 +51,9 @@ const Header: React.FC<HeaderProps> = ({
             <Avatar className="w-14 h-14 border-[3px] p-[2px] bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full">
               <div className="w-full h-full bg-black rounded-full p-[2px]">
                 <AvatarImage
-                  src={conversation.avatar}
+                  src={friendData?.image}
                   className="w-full h-full object-cover rounded-full"
-                  alt={conversation.name}
+                  alt={friendData?.image}
                 />
               </div>
             </Avatar>
@@ -63,14 +63,14 @@ const Header: React.FC<HeaderProps> = ({
                   theme === "dark" ? "text-white" : "text-black"
                 }`}
               >
-                {conversation.name}
+                {friendData?.username}
               </h4>
               <span
                 className={`text-sm ${
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
                 }`}
               >
-                {conversation.lastSeen || "Last Seen Now"}
+                {friendData?.lastSeen || "Last Seen Now"}
               </span>
             </div>
           </div>
