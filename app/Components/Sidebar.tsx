@@ -54,7 +54,7 @@ const Sidebar = ({
   const { useData, getUser, getAllUser, getUserFriends } = useApiContext();
   const [friendlist, setFriendlist] = useState([]);
   const [serchfri, setSerchfri] = useState<any>([]);
-  
+
   const getuserData = async () => {
     const user = await getUser();
     const Friendlistres = await getUserFriends();
@@ -196,7 +196,7 @@ const Sidebar = ({
           <>
             {/* First list of friends (conversations) */}
             {serchfri?.length > 0 &&
-              serchfri?.map(({ conv }: any) => (
+              serchfri?.map((conv: any) => (
                 <motion.div
                   className="border-b-2 border-dashed border-white"
                   key={conv?._id} // Unique key for each search result
@@ -222,7 +222,7 @@ const Sidebar = ({
 
             {/* Second list of friends (conversations) */}
             {friendlist.length > 0 &&
-              friendlist?.map(({ conv }: any) => (
+              friendlist?.map((conv: any) => (
                 <motion.div key={conv?._id} whileHover={{ scale: 1.03 }}>
                   <Person
                     conversation={conv}

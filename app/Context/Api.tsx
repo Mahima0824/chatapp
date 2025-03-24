@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 
 let local = "http://localhost:5000/api/v1";
 let live = "https://chatapp-backend-6i7e.onrender.com/api/v1";
-
-const NEXT_BACKEND_URL = live;
+export const NEXT_BACKEND_URL = live;
 
 interface ApiContextType {
   registerUser: (formData: any) => Promise<any>;

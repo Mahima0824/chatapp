@@ -10,11 +10,13 @@ const ChatInput = ({
   handleFileUpload,
   handleSend,
   message,
+  onchange
 }: {
   handleEmojiSelect: any;
   handleFileUpload: any;
   message: any;
   handleSend: any;
+  onchange: any;
 }) => {
   const pickerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,10 +43,10 @@ const ChatInput = ({
       <div
         className={`flex items-center gap-3 p-4
           ${
-          theme === "dark"
-            ? "glassBg border-gray-700 text-white"
-            : "bg-white/30 border-gray-300 text-black backdrop-blur-lg shadow-md"
-        }
+            theme === "dark"
+              ? "glassBg border-gray-700 text-white"
+              : "bg-white/30 border-gray-300 text-black backdrop-blur-lg shadow-md"
+          }
           relative`}
       >
         <div ref={pickerRef} className="relative">
@@ -77,7 +79,9 @@ const ChatInput = ({
         <div className="flex-1">
           <PlaceholdersAndVanishInput
             placeholders={["Type a message..."]}
-            onChange={(e: any) => setInputMessage(e.target.value)}
+            onChange={(e: any) => {
+              setInputMessage(e.target.value), onchange(e);
+            }}
             onSubmit={() => {
               handleSend(inputMessage);
               setInputMessage("");

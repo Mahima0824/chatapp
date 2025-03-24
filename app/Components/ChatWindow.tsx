@@ -22,8 +22,6 @@ dayjs.extend(relativeTime);
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 
-const socket = io("http://localhost:5000"); // Connect to the socket server
-
 const ChatWindow = ({
   conversation,
   sharedMedia,
@@ -37,91 +35,146 @@ const ChatWindow = ({
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false); // For toggling sidebar
   const messagesEndRef = useRef<HTMLDivElement>(null); // To scroll to the latest message
   const { theme } = useTheme();
+  const socketRef = useRef<any>(null); // Store socket reference
+
+  // typing
+  const [typingUsers, setTypingUsers] = useState<string[]>([]); // Track users typing
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+
+  console.log(typingUsers,'typingUsers')
   const [message, setMessage] = useState<string>(""); // Holds the input message
-  const { getconvertion, SendMsg, getUserFriends } = useApiContext();
+  const { getconvertion, getUserFriends } = useApiContext();
   const [friend, setFriend] = useState<any>([]);
   // Fetch chat history when component mounts
+
+  // Fetch chat messages from the server
   const getChat = async () => {
     try {
-      // Fetch the conversion messages
-      let res = await getconvertion({ reciverId: conversation });
-      // Fetch user friends
-      let fridata = await getUserFriends();
-
-      if (Array.isArray(fridata) && fridata.length > 0) {
-        let friendData: any = fridata.filter(
-          (item) => item._id === conversation
-        );
-
-        if (friendData.length > 0) {
-          setFriend(friendData);
-        } else {
-          console.log("No friend found for the given conversation ID.");
-        }
-      } else {
-        console.error("No friends data found or fridata is not an array");
-      }
-
-      // Set the messages from the conversion API response
-      setMessages(res?.msg);
+      const res = await getconvertion({ reciverId: conversation });
+      setMessages(res?.msg || []);
     } catch (error) {
       console.error("Error fetching chat data:", error);
     }
   };
 
+  const getFriend = async () => {
+    const friends = await getUserFriends();
+    const selectedFriend = friends.find((f: any) => f._id === conversation);
+    if (selectedFriend) setFriend([selectedFriend]);
+  };
+
   useEffect(() => {
-    getChat(); // Get chat history on initial load
-  }, [conversation]);
+    getChat();
+    getFriend();
 
-  // Scroll to the latest message when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    // Initialize socket connection and emit "join" event only once
+    socketRef.current = io("https://chatapp-backend-6i7e.onrender.com", { withCredentials: true });
 
-  // Join the room when the component mounts
-  useEffect(() => {
-    if (conversation) {
-      socket.emit("join_room", conversation); // Joining the room with the conversationId as roomId
-    }
+    // Emit "join" event when component mounts to join the room
+    socketRef.current.emit("join", {
+      userId: userinfo?._id,
+      otherUserId: conversation,
+    });
 
-    // Listen for new messages coming from the server
-    socket.on("receive_message", (data) => {
-      console.log("New message received:", data);
+    // Fetch chat history after joining the room
+    socketRef.current.emit("getHistory", {
+      userId: userinfo?._id,
+      otherUserId: conversation,
+    });
 
-      // Only update the messages if the message belongs to the current conversation
-      if (data.receiver === conversation || data.sender === conversation) {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            message: data.message,
-            senderId: data.sender,
-            receiverId: data.receiver,
-            timestamp: data.timestamp,
-          },
-        ]);
+    socketRef.current.on("chatHistory", (historyMessages: any) => {
+      if (Array.isArray(historyMessages)) {
+        setMessages(historyMessages); // Update messages with chat history
       }
     });
 
-    // Cleanup on unmount
+    socketRef.current.on("receiveMessage", (newMessage: any) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]); // Add new message to the chat
+    });
+
+    socketRef.current.on("messageSent", (newMessage: any) => {
+      console.log("Message sent:", newMessage);
+    });
+
+    // Clean up socket event listeners when component unmounts
     return () => {
-      socket.off("receive_message");
+      socketRef.current.off("receiveMessage");
+      socketRef.current.off("messageSent");
+      socketRef.current.off("chatHistory");
+      socketRef.current.disconnect(); // Disconnect the socket when component is unmounted
     };
-  }, [conversation]);
+  }, [conversation]); // Empty dependency array ensures this useEffect runs only once when the component mounts
+
+  useEffect(() => {
+    socketRef.current.on("typingUser", (userId) => {
+      console.log('object')
+      if (!typingUsers.includes(userId)) {
+        setTypingUsers((prev) => [...prev, userId]);
+      }
+    });
+
+    socketRef.current.on("notTyping", (userId) => {
+      setTypingUsers((prev) => prev.filter((id) => id !== userId));
+    });
+    return () => {
+      socketRef.current.off("typingUser");
+      socketRef.current.off("notTyping");
+    };
+  }, [typingUsers]);
+
+  useEffect(() => {
+    socketRef.current.on("onlineStatus", (users) => {
+      setOnlineUsers(users);
+    });
+
+    return () => {
+      socketRef.current.off("onlineStatus");
+    };
+  }, []);
+
+  // seen ========
+  const handleMessageSeen = (messageId: string) => {
+    socketRef.current.emit("messageSeen", messageId);
+  };
+
+  useEffect(() => {
+    socketRef.current.on("messageSeen", (messageId) => {
+      // Mark the message as seen in the UI
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg._id === messageId ? { ...msg, seen: true } : msg
+        )
+      );
+    });
+
+    return () => {
+      socketRef.current.off("messageSeen");
+    };
+  }, []);
 
   // Send message function
-  const handleSend = (e: string): void => {
-    if (e.trim()) {
-      const newMessage = {
-        message: e,
-        senderId: userinfo?._id,
-        receiverId: conversation, // Assuming receiverId is the conversation ID
-      };
+  const handleSend = async (e: any) => {
+    if (!e.trim()) return;
 
-      // Emit to the backend to save the message and broadcast to the receiver
-      socket.emit("send_message", newMessage);
-      getChat();
-      setMessage(""); // Clear the input field after sending
-    }
+    const newMessage = {
+      senderId: userinfo?._id,
+      receiverId: conversation,
+      message: e,
+      fileUrl: "", // You can handle file uploads here if needed
+    };
+
+    console.log(newMessage, "newMessage");
+
+    // Emit "sendMessage" to the server
+    socketRef.current.emit("sendMessage", newMessage);
+
+    setMessage(""); // Clear input field after sending the message
+
+    // // Scroll to bottom of messages after sending
+    // messagesEndRef?.current.scrollIntoView({
+    //   behavior: "smooth",
+    //   block: "end",
+    // });
   };
 
   // Handle emoji selection
@@ -217,12 +270,14 @@ const ChatWindow = ({
               <Message
                 key={index} // Use timestamp as a unique key
                 message={msg}
-                isOwnMessage={msg.sender === userinfo?._id}
+                isOwnMessage={msg.senderId === userinfo?._id}
                 handleEdit={handleEdit}
                 handleCopy={handleCopy}
                 handleDelete={handleDelete}
               />
             ))}
+            {typingUsers ?? <p>typing....</p>}
+            {onlineUsers}:"online status"
           </AnimatePresence>
           <div ref={messagesEndRef} />
         </div>
@@ -231,13 +286,17 @@ const ChatWindow = ({
           handleFileUpload={handleFileUpload}
           handleSend={handleSend}
           message={message}
+          onchange={() =>
+            socketRef.current.emit("typing", {
+              senderId: userinfo?._id,
+            })
+          }
         />
       </div>
       {sidebarOpen && (
         <PersonalInfo
           setSidebarOpen={setSidebarOpen}
           friendData={friend[0]}
-
           sharedMedia={sharedMedia}
           sharedLinks={sharedLinks}
           sharedDocs={sharedDocs}
