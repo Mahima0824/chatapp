@@ -28,22 +28,20 @@ const ChatWindow = ({
   sharedLinks,
   sharedDocs,
   userinfo,
+  setTypingUsers,
+  typingUsers,
 }: any) => {
   const [messages, setMessages] = useState<any[]>([]); // Holds all messages in the conversation
   const [newestMessageId, setNewestMessageId] = useState<number | null>(null); // Tracks the most recent message
   const [showPicker, setShowPicker] = useState<boolean>(false); // For emoji picker toggle
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false); // For toggling sidebar
-  const messagesEndRef = useRef<HTMLDivElement>(null); // To scroll to the latest message
+  const messagesEndRef = useRef<any>(null); // To scroll to the latest message
   const { theme } = useTheme();
   const socketRef = useRef<any>(null); // Store socket reference
 
-  // typing
-  const [typingUsers, setTypingUsers] = useState<string[]>([]); // Track users typing
-  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
-
-  console.log(typingUsers,'typingUsers')
+  const [fileurl, setFileurl] = useState<any>();
   const [message, setMessage] = useState<string>(""); // Holds the input message
-  const { getconvertion, getUserFriends } = useApiContext();
+  const { getconvertion, getUserFriends, onlineuserupdate } = useApiContext();
   const [friend, setFriend] = useState<any>([]);
   // Fetch chat history when component mounts
 
@@ -68,7 +66,9 @@ const ChatWindow = ({
     getFriend();
 
     // Initialize socket connection and emit "join" event only once
-    socketRef.current = io("https://chatapp-backend-6i7e.onrender.com", { withCredentials: true });
+    socketRef.current = io("http://localhost:5000", {
+      withCredentials: true,
+    });
 
     // Emit "join" event when component mounts to join the room
     socketRef.current.emit("join", {
@@ -88,69 +88,61 @@ const ChatWindow = ({
       }
     });
 
+    // receive
     socketRef.current.on("receiveMessage", (newMessage: any) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]); // Add new message to the chat
     });
 
+    // send
     socketRef.current.on("messageSent", (newMessage: any) => {
       console.log("Message sent:", newMessage);
     });
 
+    // delete message
+    socketRef.current.on("messageDeleted", ({ messageIds }: any) => {
+      setMessages((prev) =>
+        prev.filter((msg) => !messageIds.includes(msg._id))
+      );
+      console.log("Messages deleted:", messageIds);
+    });
+
+    // typing.....
+    socketRef.current.on("typingUser", (userId: any) => {
+      setTypingUsers(userId);
+      setTimeout(() => {
+        setTypingUsers(null);
+      }, 1200);
+    });
+
+    let data = { senderId: userinfo?._id, receiverId: conversation };
+    socketRef.current.emit("messageSeen", data);
+
+    // mark
+    socketRef.current.on("messageSeenSend", (data: any) => {
+      console.log("Messages marked as seen for:");
+    });
+
+    // edit message
+    socketRef.current.on("messageEdited", ({ messageId, newMessage }: any) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === messageId ? { ...msg, message: newMessage } : msg
+        )
+      );
+    });
+
+   
     // Clean up socket event listeners when component unmounts
     return () => {
       socketRef.current.off("receiveMessage");
       socketRef.current.off("messageSent");
       socketRef.current.off("chatHistory");
+      socketRef.current.off("typingUser");
+      socketRef.current.off("messageEdited");
+
       socketRef.current.disconnect(); // Disconnect the socket when component is unmounted
     };
-  }, [conversation]); // Empty dependency array ensures this useEffect runs only once when the component mounts
-
-  useEffect(() => {
-    socketRef.current.on("typingUser", (userId) => {
-      console.log('object')
-      if (!typingUsers.includes(userId)) {
-        setTypingUsers((prev) => [...prev, userId]);
-      }
-    });
-
-    socketRef.current.on("notTyping", (userId) => {
-      setTypingUsers((prev) => prev.filter((id) => id !== userId));
-    });
-    return () => {
-      socketRef.current.off("typingUser");
-      socketRef.current.off("notTyping");
-    };
-  }, [typingUsers]);
-
-  useEffect(() => {
-    socketRef.current.on("onlineStatus", (users) => {
-      setOnlineUsers(users);
-    });
-
-    return () => {
-      socketRef.current.off("onlineStatus");
-    };
-  }, []);
-
-  // seen ========
-  const handleMessageSeen = (messageId: string) => {
-    socketRef.current.emit("messageSeen", messageId);
-  };
-
-  useEffect(() => {
-    socketRef.current.on("messageSeen", (messageId) => {
-      // Mark the message as seen in the UI
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg._id === messageId ? { ...msg, seen: true } : msg
-        )
-      );
-    });
-
-    return () => {
-      socketRef.current.off("messageSeen");
-    };
-  }, []);
+  }, [conversation, onlineuserupdate]); // Empty dependency array ensures this useEffect runs only once when the component mounts
 
   // Send message function
   const handleSend = async (e: any) => {
@@ -163,18 +155,15 @@ const ChatWindow = ({
       fileUrl: "", // You can handle file uploads here if needed
     };
 
-    console.log(newMessage, "newMessage");
-
-    // Emit "sendMessage" to the server
     socketRef.current.emit("sendMessage", newMessage);
 
     setMessage(""); // Clear input field after sending the message
 
     // // Scroll to bottom of messages after sending
-    // messagesEndRef?.current.scrollIntoView({
-    //   behavior: "smooth",
-    //   block: "end",
-    // });
+    messagesEndRef?.current.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   // Handle emoji selection
@@ -185,9 +174,42 @@ const ChatWindow = ({
   };
 
   // Handle file upload (if necessary)
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
-    // Handle file upload here if necessary
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Upload file to Cloudinary via your backend
+      // const response = await fetch("http://localhost:5000/api/v1/uploadFiles", {
+      //   method: "POST",
+      //   body: formData,
+      // });
+
+      // const data = await response.json();
+
+      // if (!data.fileUrl) {
+      //   console.error("File upload failed");
+      //   return;
+      // }
+
+      // Create message object with Cloudinary file URL
+      // const newMessage = {
+      //   senderId: userinfo?._id,
+      //   receiverId: conversation,
+      //   message: "",
+      //   file: data.fileUrl, // Attach file data
+      // };
+
+      // Emit message via Socket.io
+      // socketRef.current.emit("sendMessage", newMessage);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
   };
 
   // For searching
@@ -216,17 +238,31 @@ const ChatWindow = ({
     setShowWallpaperModal(false);
   };
 
-  const handleEdit = (msg: any) => {
-    // Handle edit logic here
+  const handleEdit = (editingMessage: any) => {
+    if (!editingMessage || !editingMessage.newMessage) return;
+
+    const updatedMessage = {
+      messageId: editingMessage.messageId,
+      newMessage: editingMessage.newMessage,
+      userId: userinfo?._id,
+      senderId: conversation,
+    };
+
+    socketRef.current.emit("editMessage", updatedMessage);
   };
 
   const handleCopy = (msg: any) => {
-    navigator.clipboard.writeText(msg.text);
-    successToast("Copied to clipboard!");
+    navigator.clipboard.writeText(msg);
+    // successToast("Copied to clipboard!");
   };
 
   const handleDelete = (msgId: number) => {
-    // Handle delete logic here
+    const data = {
+      messageIds: [msgId],
+      userId: userinfo?._id,
+      senderId: conversation,
+    };
+    socketRef.current.emit("deleteMessage", data);
   };
 
   return (
@@ -251,6 +287,7 @@ const ChatWindow = ({
             handleSearch={handleSearch}
             onAvatarClick={() => setSidebarOpen(true)}
             friendData={friend[0]}
+            typingUsers={typingUsers == userinfo?._id}
           />
         )}
 
@@ -276,8 +313,11 @@ const ChatWindow = ({
                 handleDelete={handleDelete}
               />
             ))}
-            {typingUsers ?? <p>typing....</p>}
-            {onlineUsers}:"online status"
+            {typingUsers !== conversation && typingUsers !== null && (
+              <p className="bg-slate-600 w-max px-2 py-1 rounded-xl text-yellow-300">
+                typing....
+              </p>
+            )}
           </AnimatePresence>
           <div ref={messagesEndRef} />
         </div>
@@ -288,7 +328,8 @@ const ChatWindow = ({
           message={message}
           onchange={() =>
             socketRef.current.emit("typing", {
-              senderId: userinfo?._id,
+              userId: conversation,
+              otherUserId: userinfo?._id,
             })
           }
         />

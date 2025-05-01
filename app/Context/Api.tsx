@@ -3,10 +3,15 @@ import React, { createContext, useContext, ReactNode, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { io } from "socket.io-client";
 
 let local = "http://localhost:5000/api/v1";
 let live = "https://chatapp-backend-6i7e.onrender.com/api/v1";
-export const NEXT_BACKEND_URL = live;
+export const NEXT_BACKEND_URL = local;
+
+export const socket = io("http://localhost:5000", {
+  transports: ["websocket"],
+});
 
 interface ApiContextType {
   registerUser: (formData: any) => Promise<any>;
@@ -20,6 +25,12 @@ interface ApiContextType {
   SendMsg: any;
   getconvertion: any;
   friendRes: any;
+  onlineuserupdate: any;
+  setOnlineuserupdate: any;
+  createGroup: (groupData: any) => Promise<any>;
+  editGroup: (roomId: string, groupData: any) => Promise<any>;
+  deleteGroup: (roomId: string) => Promise<any>;
+  getGroup: any;
 }
 
 const CreateApiContext = createContext<any | undefined>(undefined);
@@ -38,7 +49,7 @@ interface ApiProviderProps {
 
 const ApiProvider = ({ children }: ApiProviderProps) => {
   const router = useRouter();
-
+  const [onlineuserupdate, setOnlineuserupdate] = useState([]);
   const [useData, setUseData] = useState<any>(null);
   // Register API function
   const registerUser = async (formData: any) => {
@@ -242,15 +253,17 @@ const ApiProvider = ({ children }: ApiProviderProps) => {
       // Make a decision based on the type of request
       switch (type) {
         case "send":
-          response = await axios.post(
-            `${NEXT_BACKEND_URL}/send-friend-request`,
-            data, // Changed msg to data
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+          // response = await axios.post(
+          //   `${NEXT_BACKEND_URL}/send-friend-request`,
+          //   data, // Changed msg to data
+          //   {
+          //     headers: {
+          //       Authorization: `Bearer ${token}`,
+          //     },
+          //   }
+          // );
+          socket.emit("sendFriendRes", data);
+
           break;
 
         case "send-remove":
@@ -299,6 +312,7 @@ const ApiProvider = ({ children }: ApiProviderProps) => {
               },
             }
           );
+
           break;
         // remove-friend
         default:
@@ -306,11 +320,110 @@ const ApiProvider = ({ children }: ApiProviderProps) => {
       }
 
       // Return the response data if request is successful
-      return response.data;
+      // return response.data;
     } catch (error) {
       console.log("Error in friend request operation: ", error);
     }
   };
+
+  // GRoup for
+  const createGroup = async (groupData: any) => {
+    console.log(groupData, "groupData");
+    try {
+      const token = localStorage.getItem("chatapptoken");
+
+      if (!token) {
+        throw new Error("No token found, user is not authenticated.");
+      }
+
+      const response = await axios.post(
+        `${NEXT_BACKEND_URL}/create-room`,
+        groupData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response;
+    } catch (error) {}
+  };
+
+  const editGroup = async (roomId: string, groupData: any) => {
+    try {
+      const token = localStorage.getItem("chatapptoken");
+
+      if (!token) {
+        throw new Error("No token found, user is not authenticated.");
+      }
+
+      const response = await axios.post(
+        `${NEXT_BACKEND_URL}/edit-room/${roomId}`,
+        groupData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success("Group updated successfully!");
+      return response.data;
+    } catch (error) {
+      throw new Error("Group update failed");
+    }
+  };
+
+  const deleteGroup = async (roomId: string) => {
+    try {
+      const token = localStorage.getItem("chatapptoken");
+
+      if (!token) {
+        throw new Error("No token found, user is not authenticated.");
+      }
+
+      const response = await axios.post(
+        `${NEXT_BACKEND_URL}/delete-room/${roomId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success("Group deleted successfully!");
+      return response.data;
+    } catch (error) {
+      throw new Error("Group deletion failed");
+    }
+  };
+
+  const getGroup = async (groupIds: string[]) => {
+    try {
+      const token = localStorage.getItem("chatapptoken");
+  
+      if (!token) {
+        throw new Error("No token found, user is not authenticated.");
+      }
+  
+      const response = await axios.post(
+        `${NEXT_BACKEND_URL}/get-room-groupId`,
+        { groupIds },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      return response.data;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to fetch group data");
+      throw new Error("Failed to fetch group data");
+    }
+  };
+  
+  
 
   return (
     <CreateApiContext.Provider
@@ -326,6 +439,12 @@ const ApiProvider = ({ children }: ApiProviderProps) => {
         getconvertion,
         SendMsg,
         friendRes,
+        onlineuserupdate,
+        setOnlineuserupdate,
+        createGroup,
+        editGroup,
+        deleteGroup,
+        getGroup,
       }}
     >
       {children}

@@ -3,7 +3,7 @@ import { Fragment, useState } from "react";
 import { useSidebar } from "../Context/context";
 import { X } from "lucide-react";
 
-const EditModal = ({ message }: { message: string }) => {
+const EditModal = ({ message }: { message?: string }) => {
   const { editmodel, setEditmodel } = useSidebar();
 
   return (

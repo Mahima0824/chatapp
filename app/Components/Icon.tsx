@@ -12,7 +12,8 @@ interface IconButtonProps {
   className?: string;
 }
 
-const IconButton: React.FC<IconButtonProps> = ({
+const 
+IconButton: React.FC<IconButtonProps> = ({
   name,
   size = 24,
   onClick,

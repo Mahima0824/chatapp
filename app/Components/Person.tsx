@@ -2,9 +2,11 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import React, { useEffect, useState } from "react";
 import { useTheme } from "../Context/ThemeContext";
 import { useApiContext } from "../Context/Api";
+import { useFormattedDateLastseen } from "@/lib/timeconvert";
 
-const Person = ({ conversation, onClick }: any) => {
+const Person = ({ conversation, onClick, typingUsers }: any) => {
   const { theme } = useTheme();
+  const { formatted } = useFormattedDateLastseen(conversation?.lastSeen);
   return (
     <div
       onClick={onClick}
@@ -58,7 +60,7 @@ const Person = ({ conversation, onClick }: any) => {
               theme === "dark" ? "text-gray-400" : "text-slate-500"
             }`}
           >
-            {conversation?.lastSeen}
+            {typingUsers ? "typing..." : formatted || "Last Seen Now"}{" "}
           </span>
         </div>
       </div>
@@ -68,16 +70,15 @@ const Person = ({ conversation, onClick }: any) => {
 
 export default Person;
 
-
 export const SerchPerson = ({
   conversation,
   onClick,
   useData,
   searchfriendfn,
+  getuserData,
 }: any) => {
   const { theme } = useTheme();
 
-  console.log(conversation, "usedata", useData);
   const { friendRes } = useApiContext();
 
   const [status, setStatus] = useState("");
@@ -92,6 +93,8 @@ export const SerchPerson = ({
       : setStatus("follow");
   }, [conversation, useData]);
 
+  // send ...........
+
   const hadlingsendres = async () => {
     let typeset =
       status === "paddding..."
@@ -105,19 +108,21 @@ export const SerchPerson = ({
     // Make the API call with the correct type and data
     let res = await friendRes({
       type: typeset,
-      data: { receiverId: conversation?._id },
+      data: { receiverId: conversation?._id, senderId: useData?._id },
     });
 
     searchfriendfn();
+    getuserData();
   };
 
+  // reject Request
   const rejectApi = async () => {
     let res = await friendRes({
       type: "reject",
-      data: { receiverId: conversation?._id },
+      data: { receiverId: conversation?._id, senderId: useData?._id },
     });
-
     searchfriendfn();
+    getuserData();
   };
 
   return (

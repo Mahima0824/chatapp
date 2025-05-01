@@ -19,7 +19,6 @@ export default function ProfileModal() {
     setImage(user?.image || null);
   };
 
-  console.log(useData, "data");
   useEffect(() => {
     getuserData();
   }, []);

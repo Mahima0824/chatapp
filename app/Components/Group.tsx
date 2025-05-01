@@ -6,7 +6,7 @@ interface PersonProps {
   conversation: {
     id: string;
     name: string;
-    avatar: string;
+    images: string;
     lastMessage: string;
   };
   onClick: () => void;
@@ -35,7 +35,7 @@ const Group: React.FC<PersonProps> = ({ conversation, onClick }) => {
               }`}
             >
               <AvatarImage
-                src={conversation?.avatar}
+                src={conversation?.images}
                 alt={conversation.name}
                 className="w-full h-full object-cover rounded-full"
               />

@@ -174,3 +174,6 @@ body {
   height: 50px !important;
   width: 50px !important;
 }
+.nextjs-toast.nextjs-toast-errors-parent.nextjs-error-with-static{
+  /* display: none !important; */
+}

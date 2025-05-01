@@ -6,9 +6,9 @@ import { X } from "lucide-react";
 import { useSidebar } from "../Context/context";
 
 interface ImgModalProps {
-    imgmodel: any;
-    setIsmodel: any;
-    selectedImage:any;
+    imgmodel?: any;
+    setIsmodel?: any;
+    selectedImage?:any;
 }
 
 const ImgModal: React.FC<ImgModalProps> = () => {

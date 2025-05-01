@@ -7,6 +7,7 @@ import VoiceCallModal from "./VoiceCallModal";
 import InfoModal from "./InfoModal";
 import { Usemodel } from "../Context/context";
 import { useTheme } from "../Context/ThemeContext";
+import useFormattedDate, { useFormattedDateLastseen } from "@/lib/timeconvert";
 
 interface HeaderProps {
   conversation: {
@@ -26,12 +27,12 @@ const Header = ({
   handleSearch,
   onAvatarClick,
   friendData,
+  typingUsers,
 }: any) => {
-
   const { setVideomodel, setVoicemodel } = Usemodel();
   const { theme } = useTheme();
+  const { formatted } = useFormattedDateLastseen(friendData?.lastSeen);
 
-  console.log(friendData,'friendData=============')
   return (
     <>
       <div
@@ -65,13 +66,25 @@ const Header = ({
               >
                 {friendData?.username}
               </h4>
-              <span
+
+              <p
+                title={
+                  typingUsers
+                    ? "typing..."
+                    : friendData?.onlineStatus == true
+                    ? "Online"
+                    : formatted || "Last Seen Now"
+                }
                 className={`text-sm ${
                   theme === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
+                } text-nowrap overflow-hidden  text-ellipsis max-w-[100px] md:max-w-max`}
               >
-                {friendData?.lastSeen || "Last Seen Now"}
-              </span>
+                {typingUsers
+                  ? "typing..."
+                  : friendData?.onlineStatus == true
+                  ? "Online"
+                  : formatted || "Last Seen Now"}
+              </p>
             </div>
           </div>
           <div className="flex relative items-center gap-3">

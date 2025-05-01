@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ChatWindow from "../Components/ChatWindow";
 import StatusWindow from "../Components/StatusWindow";
 import Sidebar from "../Components/Sidebar";
@@ -7,6 +7,8 @@ import Sidebar from "../Components/Sidebar";
 import { motion } from "framer-motion";
 import { useTheme } from "../Context/ThemeContext";
 import { useApiContext } from "../Context/Api";
+import { io } from "socket.io-client";
+import useOnlineStatus from "@/lib/onlineStatus";
 
 interface Conversation {
   id: string;
@@ -171,6 +173,7 @@ export default function Home() {
   }
   const { theme, toggleTheme } = useTheme();
   const { useData, getUser, getAllUser, getUserFriends } = useApiContext();
+  const [typingUsers, setTypingUsers] = useState<string | null>(null); // Track users typing
 
   const [userinfo, setUserinfo] = useState<any>();
 
@@ -182,6 +185,10 @@ export default function Home() {
   useEffect(() => {
     getuserData();
   }, []);
+
+  // online offline status.....
+
+  const onlineUsers = useOnlineStatus(userinfo);
 
   return (
     <motion.div
@@ -208,6 +215,8 @@ export default function Home() {
             onSelectConversation={handleSelectConversation}
             onSelectStatus={handleSelectStatus}
             onSelectCall={handleSelectCall}
+            typingUsers={typingUsers}
+
           />
 
           <div className="ml-[350px] overflow-y-auto min-h-screen w-full">
@@ -224,6 +233,8 @@ export default function Home() {
                   sharedLinks={sharedLinks}
                   userinfo={userinfo}
                   sharedDocs={sharedDocs}
+                  typingUsers={typingUsers}
+                  setTypingUsers={setTypingUsers}
                 />
               ) : selectedStatus ? (
                 <StatusWindow statusUpdates={statusUpdates} />

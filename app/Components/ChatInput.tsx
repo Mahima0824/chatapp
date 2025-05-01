@@ -64,7 +64,7 @@ const ChatInput = ({
         </div>
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 rounded-lg hover:bg-zinc-700 transition"
+          className="p-2 hidden rounded-lg hover:bg-zinc-700 transition"
         >
           <Paperclip className="w-6 h-6 text-gray-400 hover:text-white" />
         </button>
@@ -90,7 +90,7 @@ const ChatInput = ({
           />
         </div>
         <div>
-          <button className="p-2 rounded-lg hover:bg-zinc-700 transition">
+          <button className="p-2 hidden rounded-lg hover:bg-zinc-700 transition">
             <FaMicrophone className="w-6 h-6 text-gray-400 hover:text-white" />
           </button>
         </div>
